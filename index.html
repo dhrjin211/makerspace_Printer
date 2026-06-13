@@ -1097,8 +1097,13 @@ onAuthStateChanged(auth, async user => {
 });
 
 // ── App init ──
-function initApp() {
-  seedPrinters();
+async function initApp() {
+  // Show loading state
+  document.getElementById('printers-grid').innerHTML = `
+    <div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--muted);font-family:var(--mono);font-size:12px;letter-spacing:0.1em">
+      INITIALIZING PRINTER FLEET...
+    </div>`;
+  await seedPrinters();
   listenPrinters();
   listenActivity();
   listenCommunity();
@@ -1108,14 +1113,19 @@ function initApp() {
 
 // ── Seed printer docs if they don't exist ──
 async function seedPrinters() {
+  const promises = [];
   for (let i = 1; i <= PRINTER_COUNT; i++) {
     const id = `X1C-${String(i).padStart(2,'0')}`;
     const ref = doc(db, 'printers', id);
-    const snap = await getDoc(ref);
-    if (!snap.exists()) {
-      await setDoc(ref, { id, model: 'X1 Carbon', status: 'idle', currentJob: null, updatedAt: serverTimestamp() });
-    }
+    promises.push(
+      getDoc(ref).then(snap => {
+        if (!snap.exists()) {
+          return setDoc(ref, { id, model: 'X1 Carbon', status: 'idle', currentJob: null, updatedAt: serverTimestamp() });
+        }
+      })
+    );
   }
+  await Promise.all(promises);
 }
 
 // ── Listen to printers ──
