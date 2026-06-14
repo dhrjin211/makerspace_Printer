@@ -6,795 +6,235 @@
 <title>Corner Makery — Ford Design Center</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-
 <style>
-  :root {
-    --bg: #0F1117;
-    --surface: #171B26;
-    --surface2: #1E2330;
-    --border: #2A2F3E;
-    --orange: #FF6B2B;
-    --orange-dim: rgba(255,107,43,0.12);
-    --orange-glow: rgba(255,107,43,0.25);
-    --green: #2ECC71;
-    --green-dim: rgba(46,204,113,0.12);
-    --red: #E74C3C;
-    --red-dim: rgba(231,76,60,0.12);
-    --yellow: #F39C12;
-    --yellow-dim: rgba(243,156,18,0.12);
-    --text: #E8EAF0;
-    --muted: #6B7280;
-    --mono: 'JetBrains Mono', monospace;
-    --sans: 'Inter', sans-serif;
-  }
-
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--sans);
-    min-height: 100vh;
-    font-size: 14px;
-  }
-
-  /* ── AUTH SCREEN ── */
-  #auth-screen {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    padding: 2rem;
-  }
-
-  .auth-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 2.5rem;
-    width: 100%;
-    max-width: 400px;
-  }
-
-  .auth-logo {
-    font-family: var(--mono);
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.15em;
-    color: var(--orange);
-    text-transform: uppercase;
-    margin-bottom: 0.4rem;
-  }
-
-  .auth-title {
-    font-size: 26px;
-    font-weight: 600;
-    margin-bottom: 0.3rem;
-    letter-spacing: -0.5px;
-  }
-
-  .auth-sub {
-    color: var(--muted);
-    font-size: 13px;
-    margin-bottom: 2rem;
-  }
-
-  .field {
-    margin-bottom: 1rem;
-  }
-
-  .field label {
-    display: block;
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    margin-bottom: 0.4rem;
-  }
-
-  .field input, .field select, .field textarea {
-    width: 100%;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 7px;
-    padding: 0.6rem 0.85rem;
-    color: var(--text);
-    font-family: var(--sans);
-    font-size: 14px;
-    outline: none;
-    transition: border-color 0.15s;
-  }
-
-  .field input:focus, .field select:focus, .field textarea:focus {
-    border-color: var(--orange);
-  }
-
-  .field textarea { resize: vertical; min-height: 80px; }
-
-  select option { background: var(--surface2); }
-
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.65rem 1.2rem;
-    border-radius: 7px;
-    border: none;
-    cursor: pointer;
-    font-family: var(--sans);
-    font-size: 14px;
-    font-weight: 500;
-    transition: all 0.15s;
-  }
-
-  .btn-primary {
-    background: var(--orange);
-    color: #fff;
-    width: 100%;
-    justify-content: center;
-    padding: 0.75rem;
-  }
-  .btn-primary:hover { background: #e85d22; }
-
-  .btn-ghost {
-    background: transparent;
-    color: var(--muted);
-    border: 1px solid var(--border);
-  }
-  .btn-ghost:hover { border-color: var(--orange); color: var(--orange); }
-
-  .btn-sm { padding: 0.4rem 0.8rem; font-size: 12px; }
-  .btn-danger { background: var(--red-dim); color: var(--red); border: 1px solid rgba(231,76,60,0.3); }
-  .btn-success { background: var(--green-dim); color: var(--green); border: 1px solid rgba(46,204,113,0.3); }
-
-  .auth-toggle {
-    text-align: center;
-    margin-top: 1.2rem;
-    color: var(--muted);
-    font-size: 13px;
-  }
-
-  .auth-toggle span {
-    color: var(--orange);
-    cursor: pointer;
-    text-decoration: underline;
-  }
-
-  /* ── APP SHELL ── */
-  #app { display: none; }
-
-  .topbar {
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    padding: 0 1.5rem;
-    height: 54px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-  }
-
-  .topbar-left {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-  }
-
-  .brand {
-    font-family: var(--mono);
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    color: var(--orange);
-  }
-
-  .brand span {
-    color: var(--muted);
-    font-weight: 400;
-  }
-
-  .nav {
-    display: flex;
-    gap: 0.2rem;
-  }
-
-  .nav-item {
-    padding: 0.35rem 0.85rem;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--muted);
-    transition: all 0.15s;
-    border: none;
-    background: none;
-    font-family: var(--sans);
-  }
-
-  .nav-item:hover { color: var(--text); background: var(--surface2); }
-  .nav-item.active { color: var(--orange); background: var(--orange-dim); }
-
-  .topbar-right {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-  }
-
-  .user-chip {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 13px;
-    color: var(--muted);
-  }
-
-  .avatar {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    background: var(--orange-dim);
-    border: 1px solid var(--orange);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: var(--mono);
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--orange);
-  }
-
-  /* ── MAIN CONTENT ── */
-  .main { padding: 1.5rem; max-width: 1400px; margin: 0 auto; }
-
-  .tab-content { display: none; }
-  .tab-content.active { display: block; }
-
-  /* ── PRINTERS GRID ── */
-  .section-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 1.2rem;
-  }
-
-  .section-title {
-    font-family: var(--mono);
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--muted);
-  }
-
-  .printers-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: 1rem;
-    margin-bottom: 2rem;
-  }
-
-  .printer-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 1rem 1.1rem;
-    cursor: pointer;
-    transition: all 0.2s;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .printer-card:hover { border-color: var(--orange); transform: translateY(-1px); }
-
-  .printer-card.printing {
-    border-color: var(--green);
-    box-shadow: 0 0 0 1px var(--green), 0 4px 20px rgba(46,204,113,0.1);
-  }
-
-  .printer-card.printing::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 2px;
-    background: var(--green);
-    animation: scanline 2s ease-in-out infinite;
-  }
-
-  @keyframes scanline {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.3; }
-  }
-
-  .printer-card.failed { border-color: var(--red); }
-  .printer-card.idle { border-color: var(--border); }
-
-  .printer-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    margin-bottom: 0.75rem;
-  }
-
-  .printer-id {
-    font-family: var(--mono);
-    font-size: 18px;
-    font-weight: 700;
-    letter-spacing: -0.5px;
-  }
-
-  .printer-model {
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--muted);
-    letter-spacing: 0.05em;
-    margin-top: 1px;
-  }
-
-  .status-pill {
-    font-family: var(--mono);
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    padding: 0.25rem 0.6rem;
-    border-radius: 20px;
-  }
-
-  .status-pill.idle { background: var(--surface2); color: var(--muted); }
-  .status-pill.printing { background: var(--green-dim); color: var(--green); }
-  .status-pill.failed { background: var(--red-dim); color: var(--red); }
-  .status-pill.paused { background: var(--yellow-dim); color: var(--yellow); }
-
-  .printer-info {
-    font-size: 12px;
-    color: var(--muted);
-    line-height: 1.6;
-  }
-
-  .printer-info strong { color: var(--text); font-weight: 500; }
-
-  .progress-bar {
-    height: 3px;
-    background: var(--border);
-    border-radius: 2px;
-    margin: 0.75rem 0 0.5rem;
-    overflow: hidden;
-  }
-
-  .progress-fill {
-    height: 100%;
-    background: var(--green);
-    border-radius: 2px;
-    transition: width 0.5s ease;
-  }
-
-  .claim-hint {
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--orange);
-    letter-spacing: 0.05em;
-    margin-top: 0.5rem;
-  }
-
-  /* ── ACTIVITY FEED ── */
-  .feed { display: flex; flex-direction: column; gap: 0.75rem; }
-
-  .feed-item {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 1rem 1.2rem;
-    display: flex;
-    gap: 1rem;
-    align-items: flex-start;
-  }
-
-  .feed-avatar {
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-    background: var(--orange-dim);
-    border: 1px solid rgba(255,107,43,0.3);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: var(--mono);
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--orange);
-    flex-shrink: 0;
-  }
-
-  .feed-body { flex: 1; min-width: 0; }
-
-  .feed-top {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-bottom: 0.3rem;
-    flex-wrap: wrap;
-  }
-
-  .feed-name { font-weight: 600; font-size: 13px; }
-
-  .feed-tag {
-    font-family: var(--mono);
-    font-size: 10px;
-    padding: 0.15rem 0.5rem;
-    border-radius: 4px;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-  }
-
-  .tag-course { background: rgba(100,149,237,0.15); color: #6495ED; }
-  .tag-personal { background: var(--orange-dim); color: var(--orange); }
-  .tag-club { background: rgba(155,89,182,0.15); color: #9B59B6; }
-
-  .feed-meta {
-    font-size: 12px;
-    color: var(--muted);
-    margin-bottom: 0.4rem;
-  }
-
-  .feed-desc { font-size: 13px; color: var(--text); line-height: 1.5; }
-
-  .feed-outcome {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    margin-top: 0.5rem;
-    font-family: var(--mono);
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    padding: 0.2rem 0.55rem;
-    border-radius: 4px;
-  }
-
-  .outcome-success { background: var(--green-dim); color: var(--green); }
-  .outcome-failed { background: var(--red-dim); color: var(--red); }
-  .outcome-active { background: var(--green-dim); color: var(--green); }
-
-  .feedback-section {
-    margin-top: 0.75rem;
-    padding-top: 0.75rem;
-    border-top: 1px solid var(--border);
-  }
-
-  .feedback-item {
-    font-size: 12px;
-    color: var(--muted);
-    margin-bottom: 0.3rem;
-    padding: 0.4rem 0.6rem;
-    background: var(--surface2);
-    border-radius: 5px;
-    border-left: 2px solid var(--orange);
-  }
-
-  .feedback-item strong { color: var(--orange); }
-
-  .feedback-input-row {
-    display: flex;
-    gap: 0.5rem;
-    margin-top: 0.5rem;
-  }
-
-  .feedback-input-row input {
-    flex: 1;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 0.4rem 0.7rem;
-    color: var(--text);
-    font-family: var(--sans);
-    font-size: 12px;
-    outline: none;
-  }
-
-  .feedback-input-row input:focus { border-color: var(--orange); }
-
-  /* ── COMMUNITY ── */
-  .community-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 1rem;
-  }
-
-  .project-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    overflow: hidden;
-    transition: all 0.2s;
-  }
-
-  .project-card:hover { border-color: var(--orange); transform: translateY(-2px); }
-
-  .project-image {
-    width: 100%;
-    aspect-ratio: 4/3;
-    object-fit: cover;
-    display: block;
-  }
-
-  .project-image-placeholder {
-    width: 100%;
-    aspect-ratio: 4/3;
-    background: var(--surface2);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--muted);
-    letter-spacing: 0.08em;
-  }
-
-  .project-body { padding: 1rem; }
-
-  .project-title { font-weight: 600; font-size: 14px; margin-bottom: 0.3rem; }
-
-  .project-meta {
-    font-size: 12px;
-    color: var(--muted);
-    margin-bottom: 0.5rem;
-  }
-
-  .project-desc { font-size: 13px; line-height: 1.5; color: var(--text); }
-
-  .project-footer {
-    padding: 0.75rem 1rem;
-    border-top: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.5rem;
-  }
-
-  .likes-btn {
-    display: flex;
-    align-items: center;
-    gap: 0.35rem;
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: var(--muted);
-    font-size: 12px;
-    font-family: var(--sans);
-    transition: color 0.15s;
-    padding: 0.25rem 0.5rem;
-    border-radius: 5px;
-  }
-
-  .likes-btn:hover { color: var(--orange); background: var(--orange-dim); }
-  .likes-btn.liked { color: var(--orange); }
-
-  /* ── BADGES ── */
-  .badges-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    gap: 0.75rem;
-  }
-
-  .badge-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 1.2rem 1rem;
-    text-align: center;
-    transition: all 0.2s;
-  }
-
-  .badge-card.earned {
-    border-color: var(--orange);
-    background: var(--orange-dim);
-  }
-
-  .badge-card.locked { opacity: 0.45; }
-
-  .badge-icon { font-size: 28px; margin-bottom: 0.5rem; }
-  .badge-name { font-size: 13px; font-weight: 600; margin-bottom: 0.2rem; }
-  .badge-desc { font-size: 11px; color: var(--muted); }
-
-  /* ── CLAIM MODAL ── */
-  .modal-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.7);
-    z-index: 200;
-    align-items: center;
-    justify-content: center;
-    padding: 1rem;
-  }
-
-  .modal-overlay.open { display: flex; }
-
-  .modal {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 1.75rem;
-    width: 100%;
-    max-width: 420px;
-  }
-
-  .modal-title {
-    font-size: 17px;
-    font-weight: 600;
-    margin-bottom: 0.25rem;
-  }
-
-  .modal-sub {
-    font-size: 13px;
-    color: var(--muted);
-    margin-bottom: 1.5rem;
-  }
-
-  .modal-footer {
-    display: flex;
-    gap: 0.75rem;
-    margin-top: 1.25rem;
-  }
-
-  /* ── POST MODAL ── */
-  .post-modal { max-width: 480px; }
-
-  /* ── STATS BAR ── */
-  .stats-bar {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 1rem;
-    margin-bottom: 2rem;
-  }
-
-  .stat-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 1rem 1.2rem;
-  }
-
-  .stat-value {
-    font-family: var(--mono);
-    font-size: 28px;
-    font-weight: 700;
-    color: var(--orange);
-    line-height: 1;
-    margin-bottom: 0.3rem;
-  }
-
-  .stat-label {
-    font-size: 12px;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-  }
-
-  /* ── ADMIN TABLE ── */
-  .table-wrap { overflow-x: auto; }
-
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 13px;
-  }
-
-  th {
-    text-align: left;
-    padding: 0.6rem 1rem;
-    font-family: var(--mono);
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--muted);
-    border-bottom: 1px solid var(--border);
-  }
-
-  td {
-    padding: 0.75rem 1rem;
-    border-bottom: 1px solid var(--border);
-    vertical-align: middle;
-  }
-
-  tr:last-child td { border-bottom: none; }
-  tr:hover td { background: var(--surface2); }
-
-  .empty-state {
-    text-align: center;
-    padding: 3rem 1rem;
-    color: var(--muted);
-  }
-
-  .empty-state .icon { font-size: 36px; margin-bottom: 0.75rem; }
-  .empty-state p { font-size: 14px; }
-
-  .toast {
-    position: fixed;
-    bottom: 1.5rem;
-    right: 1.5rem;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 0.75rem 1.1rem;
-    font-size: 13px;
-    z-index: 999;
-    display: none;
-    animation: slideUp 0.2s ease;
-  }
-
-  @keyframes slideUp {
-    from { transform: translateY(10px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
-  }
-
-  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
-
-  @media (max-width: 700px) {
-    .stats-bar { grid-template-columns: repeat(2, 1fr); }
-    .nav-item span { display: none; }
-    .two-col { grid-template-columns: 1fr; }
-  }
+:root {
+  --bg:#0F1117;--surface:#171B26;--surface2:#1E2330;--border:#2A2F3E;
+  --orange:#FF6B2B;--orange-dim:rgba(255,107,43,0.12);--orange-glow:rgba(255,107,43,0.25);
+  --green:#2ECC71;--green-dim:rgba(46,204,113,0.12);
+  --red:#E74C3C;--red-dim:rgba(231,76,60,0.12);
+  --yellow:#F39C12;--yellow-dim:rgba(243,156,18,0.12);
+  --purple:#9B59B6;--blue:#6495ED;
+  --text:#E8EAF0;--muted:#6B7280;
+  --mono:'JetBrains Mono',monospace;--sans:'Inter',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;font-size:14px}
+#auth-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:2rem}
+.auth-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:2.5rem;width:100%;max-width:420px}
+.auth-logo{font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.15em;color:var(--orange);text-transform:uppercase;margin-bottom:.4rem}
+.auth-title{font-size:26px;font-weight:600;margin-bottom:.3rem;letter-spacing:-.5px}
+.auth-sub{color:var(--muted);font-size:13px;margin-bottom:2rem}
+.auth-welcome{text-align:center;padding:1.5rem 0 1rem;font-size:15px;line-height:1.6;color:var(--muted)}
+.auth-welcome strong{color:var(--text);display:block;font-size:20px;margin-bottom:.5rem}
+.field{margin-bottom:1rem}
+.field label{display:block;font-size:12px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.4rem}
+.field input,.field select,.field textarea{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:.6rem .85rem;color:var(--text);font-family:var(--sans);font-size:14px;outline:none;transition:border-color .15s}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--orange)}
+.field textarea{resize:vertical;min-height:80px}
+select option{background:var(--surface2)}
+.btn{display:inline-flex;align-items:center;gap:.5rem;padding:.65rem 1.2rem;border-radius:7px;border:none;cursor:pointer;font-family:var(--sans);font-size:14px;font-weight:500;transition:all .15s}
+.btn-primary{background:var(--orange);color:#fff;width:100%;justify-content:center;padding:.75rem}
+.btn-primary:hover{background:#e85d22}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border)}
+.btn-ghost:hover{border-color:var(--orange);color:var(--orange)}
+.btn-sm{padding:.4rem .8rem;font-size:12px}
+.btn-danger{background:var(--red-dim);color:var(--red);border:1px solid rgba(231,76,60,.3)}
+.btn-success{background:var(--green-dim);color:var(--green);border:1px solid rgba(46,204,113,.3)}
+.btn-warning{background:var(--yellow-dim);color:var(--yellow);border:1px solid rgba(243,156,18,.3)}
+.auth-toggle{text-align:center;margin-top:1.2rem;color:var(--muted);font-size:13px}
+.auth-toggle span{color:var(--orange);cursor:pointer;text-decoration:underline}
+#app{display:none}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 1.5rem;height:54px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.topbar-left{display:flex;align-items:center;gap:1rem}
+.brand{font-family:var(--mono);font-size:13px;font-weight:700;letter-spacing:.1em;color:var(--orange)}
+.brand span{color:var(--muted);font-weight:400}
+.nav{display:flex;gap:.2rem}
+.nav-item{padding:.35rem .85rem;border-radius:6px;cursor:pointer;font-size:13px;font-weight:500;color:var(--muted);transition:all .15s;border:none;background:none;font-family:var(--sans)}
+.nav-item:hover{color:var(--text);background:var(--surface2)}
+.nav-item.active{color:var(--orange);background:var(--orange-dim)}
+.topbar-right{display:flex;align-items:center;gap:.75rem}
+.user-chip{display:flex;align-items:center;gap:.5rem;font-size:13px;color:var(--muted)}
+.avatar{width:28px;height:28px;border-radius:50%;background:var(--orange-dim);border:1px solid var(--orange);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;font-weight:700;color:var(--orange)}
+.main{padding:1.5rem;max-width:1400px;margin:0 auto}
+.tab-content{display:none}
+.tab-content.active{display:block}
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem}
+.section-title{font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.printers-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1rem;margin-bottom:2rem}
+.printer-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1rem 1.1rem;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+.printer-card:hover{border-color:var(--orange);transform:translateY(-1px)}
+.printer-card.printing{border-color:var(--green);box-shadow:0 0 0 1px var(--green),0 4px 20px rgba(46,204,113,.1)}
+.printer-card.printing::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--green);animation:scanline 2s ease-in-out infinite}
+@keyframes scanline{0%,100%{opacity:1}50%{opacity:.3}}
+.printer-card.failed{border-color:var(--red)}
+.printer-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:.75rem}
+.printer-id{font-family:var(--mono);font-size:18px;font-weight:700;letter-spacing:-.5px}
+.printer-model{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.05em;margin-top:1px}
+.status-pill{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:.25rem .6rem;border-radius:20px}
+.status-pill.idle{background:var(--surface2);color:var(--muted)}
+.status-pill.printing{background:var(--green-dim);color:var(--green)}
+.status-pill.failed{background:var(--red-dim);color:var(--red)}
+.status-pill.paused{background:var(--yellow-dim);color:var(--yellow)}
+.printer-info{font-size:12px;color:var(--muted);line-height:1.6}
+.printer-info strong{color:var(--text);font-weight:500}
+.progress-bar{height:3px;background:var(--border);border-radius:2px;margin:.75rem 0 .5rem;overflow:hidden}
+.progress-fill{height:100%;background:var(--green);border-radius:2px;transition:width .5s ease}
+.claim-hint{font-family:var(--mono);font-size:10px;color:var(--orange);letter-spacing:.05em;margin-top:.5rem}
+.feed{display:flex;flex-direction:column;gap:.75rem}
+.feed-item{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1rem 1.2rem;display:flex;gap:1rem;align-items:flex-start}
+.feed-avatar{width:34px;height:34px;border-radius:50%;background:var(--orange-dim);border:1px solid rgba(255,107,43,.3);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:12px;font-weight:700;color:var(--orange);flex-shrink:0}
+.feed-body{flex:1;min-width:0}
+.feed-top{display:flex;align-items:center;gap:.5rem;margin-bottom:.3rem;flex-wrap:wrap}
+.feed-name{font-weight:600;font-size:13px}
+.feed-tag{font-family:var(--mono);font-size:10px;padding:.15rem .5rem;border-radius:4px;letter-spacing:.05em;text-transform:uppercase}
+.tag-course{background:rgba(100,149,237,.15);color:#6495ED}
+.tag-personal{background:var(--orange-dim);color:var(--orange)}
+.tag-club{background:rgba(155,89,182,.15);color:#9B59B6}
+.tag-research{background:rgba(46,204,113,.15);color:#2ECC71}
+.feed-meta{font-size:12px;color:var(--muted);margin-bottom:.4rem}
+.feed-desc{font-size:13px;color:var(--text);line-height:1.5}
+.feed-outcome{display:inline-flex;align-items:center;gap:.35rem;margin-top:.5rem;font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:.2rem .55rem;border-radius:4px}
+.outcome-success{background:var(--green-dim);color:var(--green)}
+.outcome-failed{background:var(--red-dim);color:var(--red)}
+.outcome-active{background:var(--green-dim);color:var(--green)}
+.feedback-section{margin-top:.75rem;padding-top:.75rem;border-top:1px solid var(--border)}
+.feedback-item{font-size:12px;color:var(--muted);margin-bottom:.3rem;padding:.4rem .6rem;background:var(--surface2);border-radius:5px;border-left:2px solid var(--orange)}
+.feedback-item strong{color:var(--orange)}
+.feedback-input-row{display:flex;gap:.5rem;margin-top:.5rem}
+.feedback-input-row input{flex:1;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:.4rem .7rem;color:var(--text);font-family:var(--sans);font-size:12px;outline:none}
+.feedback-input-row input:focus{border-color:var(--orange)}
+
+/* community */
+.community-section{margin-bottom:2.5rem}
+.community-section-title{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--orange);margin-bottom:1rem;padding:.4rem .8rem;background:var(--orange-dim);border-radius:6px;display:inline-block}
+.community-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem;margin-bottom:.5rem}
+.project-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;transition:all .2s}
+.project-card:hover{border-color:var(--orange);transform:translateY(-2px);box-shadow:0 8px 24px rgba(255,107,43,.1)}
+.project-image{width:100%;aspect-ratio:4/3;object-fit:cover;display:block}
+.project-image-placeholder{width:100%;aspect-ratio:4/3;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.08em}
+.project-body{padding:1rem}
+.project-title{font-weight:600;font-size:14px;margin-bottom:.3rem}
+.project-meta{font-size:12px;color:var(--muted);margin-bottom:.5rem;display:flex;align-items:center;gap:.4rem;flex-wrap:wrap}
+.project-desc{font-size:13px;line-height:1.5;color:var(--text)}
+.project-footer{padding:.75rem 1rem;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:.5rem}
+.likes-btn{display:flex;align-items:center;gap:.35rem;background:none;border:none;cursor:pointer;color:var(--muted);font-size:12px;font-family:var(--sans);transition:color .15s;padding:.25rem .5rem;border-radius:5px}
+.likes-btn:hover{color:var(--orange);background:var(--orange-dim)}
+.likes-btn.liked{color:var(--orange)}
+
+/* image upload */
+.upload-area{border:2px dashed var(--border);border-radius:8px;padding:1.5rem;text-align:center;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+.upload-area:hover,.upload-area.dragover{border-color:var(--orange);background:var(--orange-dim)}
+.upload-area input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer}
+.upload-preview{width:100%;max-height:160px;object-fit:cover;border-radius:6px;margin-top:.75rem;display:none}
+
+/* badges */
+.badges-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:.75rem}
+.badge-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.2rem 1rem;text-align:center;transition:all .2s}
+.badge-card.earned{border-color:var(--orange);background:var(--orange-dim)}
+.badge-card.locked{opacity:.4}
+.badge-icon{font-size:28px;margin-bottom:.5rem}
+.badge-name{font-size:13px;font-weight:600;margin-bottom:.2rem}
+.badge-desc{font-size:11px;color:var(--muted)}
+
+/* admin */
+.admin-section{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.25rem;margin-bottom:1.5rem}
+.admin-section-title{font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:1rem}
+.printer-admin-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:.75rem;margin-bottom:1rem}
+.printer-admin-card{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:.85rem}
+.printer-admin-card .printer-id{font-size:14px;margin-bottom:.4rem}
+.printer-admin-actions{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.6rem}
+
+/* modal */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;align-items:center;justify-content:center;padding:1rem;overflow-y:auto}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.75rem;width:100%;max-width:440px;margin:auto}
+.modal-title{font-size:17px;font-weight:600;margin-bottom:.25rem}
+.modal-sub{font-size:13px;color:var(--muted);margin-bottom:1.5rem}
+.modal-footer{display:flex;gap:.75rem;margin-top:1.25rem}
+
+/* stats */
+.stats-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:2rem}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1rem 1.2rem}
+.stat-value{font-family:var(--mono);font-size:28px;font-weight:700;color:var(--orange);line-height:1;margin-bottom:.3rem}
+.stat-label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+
+/* table */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:.6rem 1rem;font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border)}
+td{padding:.75rem 1rem;border-bottom:1px solid var(--border);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--surface2)}
+.empty-state{text-align:center;padding:3rem 1rem;color:var(--muted)}
+.empty-state .icon{font-size:36px;margin-bottom:.75rem}
+.empty-state p{font-size:14px}
+
+/* encouraging banner */
+.encourage-banner{background:linear-gradient(135deg,var(--orange-dim),rgba(155,89,182,.1));border:1px solid var(--orange);border-radius:10px;padding:1rem 1.25rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:1rem}
+.encourage-banner .icon{font-size:24px;flex-shrink:0}
+.encourage-banner p{font-size:13px;line-height:1.5;color:var(--text)}
+.encourage-banner strong{color:var(--orange)}
+
+.toast{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.75rem 1.1rem;font-size:13px;z-index:999;display:none;animation:slideUp .2s ease;max-width:320px}
+@keyframes slideUp{from{transform:translateY(10px);opacity:0}to{transform:translateY(0);opacity:1}}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.filter-row{display:flex;gap:.5rem;margin-bottom:1.25rem;flex-wrap:wrap}
+.filter-btn{font-family:var(--mono);font-size:10px;padding:.3rem .7rem;border-radius:20px;border:1px solid var(--border);background:none;cursor:pointer;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;transition:all .15s}
+.filter-btn:hover,.filter-btn.active{border-color:var(--orange);color:var(--orange);background:var(--orange-dim)}
+@media(max-width:700px){.stats-bar{grid-template-columns:repeat(2,1fr)}.nav-item span{display:none}.two-col{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 
-<!-- ── AUTH SCREEN ── -->
+<!-- AUTH -->
 <div id="auth-screen">
   <div class="auth-card">
     <div class="auth-logo">Ford Design Center</div>
     <div class="auth-title">Corner Makery</div>
-    <div class="auth-sub">Sign in with your Northwestern email to access the printers</div>
-
     <div id="login-form">
-      <div class="field">
-        <label>Email</label>
-        <input type="email" id="login-email" placeholder="netid@u.northwestern.edu">
+      <div class="auth-welcome">
+        <strong>Welcome, maker 👋</strong>
+        Sign in to claim a printer, track your prints, and show off what you build.
       </div>
-      <div class="field">
-        <label>Password</label>
-        <input type="password" id="login-password" placeholder="••••••••">
-      </div>
+      <div class="field"><label>Email</label><input type="email" id="login-email" placeholder="netid@u.northwestern.edu"></div>
+      <div class="field"><label>Password</label><input type="password" id="login-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
       <button class="btn btn-primary" onclick="doLogin()">Sign In</button>
-      <div class="auth-toggle">No account? <span onclick="toggleAuthMode()">Create one</span></div>
+      <div class="auth-toggle">New here? <span onclick="toggleAuthMode()">Create an account</span></div>
     </div>
-
     <div id="signup-form" style="display:none">
+      <div class="auth-welcome">
+        <strong>Join the Makery 🚀</strong>
+        Create your account to get started. Takes 30 seconds.
+      </div>
       <div class="two-col">
-        <div class="field">
-          <label>First Name</label>
-          <input type="text" id="signup-first" placeholder="Jane">
-        </div>
-        <div class="field">
-          <label>Last Name</label>
-          <input type="text" id="signup-last" placeholder="Smith">
-        </div>
+        <div class="field"><label>First Name</label><input type="text" id="signup-first" placeholder="Jane"></div>
+        <div class="field"><label>Last Name</label><input type="text" id="signup-last" placeholder="Smith"></div>
       </div>
-      <div class="field">
-        <label>Email</label>
-        <input type="email" id="signup-email" placeholder="netid@u.northwestern.edu">
+      <div class="field"><label>Email</label><input type="email" id="signup-email" placeholder="netid@u.northwestern.edu"></div>
+      <div class="field"><label>Program / Major</label>
+        <select id="signup-program">
+          <option value="">Select your program...</option>
+          <option value="MaDE">MaDE</option>
+          <option value="DTC">DTC</option>
+          <option value="Mechanical Engineering">Mechanical Engineering</option>
+          <option value="Computer Science">Computer Science</option>
+          <option value="Industrial Design">Industrial Design</option>
+          <option value="Art">Art</option>
+          <option value="Architecture">Architecture</option>
+          <option value="Biomedical Engineering">Biomedical Engineering</option>
+          <option value="Electrical Engineering">Electrical Engineering</option>
+          <option value="Theater">Theater</option>
+          <option value="Other">Other</option>
+        </select>
       </div>
-      <div class="field">
-        <label>Program / Major</label>
-        <input type="text" id="signup-program" placeholder="e.g. MaDE, DTC, CS, Art...">
-      </div>
-      <div class="field">
-        <label>Password</label>
-        <input type="password" id="signup-password" placeholder="Min. 6 characters">
-      </div>
-      <button class="btn btn-primary" onclick="doSignup()">Create Account</button>
-      <div class="auth-toggle">Have an account? <span onclick="toggleAuthMode()">Sign in</span></div>
+      <div class="field"><label>Password</label><input type="password" id="signup-password" placeholder="Min. 6 characters"></div>
+      <button class="btn btn-primary" onclick="doSignup()">Join Corner Makery</button>
+      <div class="auth-toggle">Already have an account? <span onclick="toggleAuthMode()">Sign in</span></div>
     </div>
   </div>
 </div>
 
-<!-- ── APP ── -->
+<!-- APP -->
 <div id="app">
   <div class="topbar">
     <div class="topbar-left">
@@ -808,105 +248,95 @@
       </nav>
     </div>
     <div class="topbar-right">
-      <div class="user-chip">
-        <div class="avatar" id="user-avatar">?</div>
-        <span id="user-name-display" style="display:none" class="name-label"></span>
-      </div>
+      <div class="user-chip"><div class="avatar" id="user-avatar">?</div></div>
       <button class="btn btn-ghost btn-sm" onclick="doLogout()">Sign out</button>
     </div>
   </div>
 
   <div class="main">
 
-    <!-- PRINTERS TAB -->
+    <!-- PRINTERS -->
     <div class="tab-content active" id="content-printers">
-      <div class="stats-bar" id="stats-bar">
+      <div class="stats-bar">
         <div class="stat-card"><div class="stat-value" id="stat-active">—</div><div class="stat-label">Active Prints</div></div>
         <div class="stat-card"><div class="stat-value" id="stat-idle">—</div><div class="stat-label">Idle Printers</div></div>
         <div class="stat-card"><div class="stat-value" id="stat-today">—</div><div class="stat-label">Prints Today</div></div>
         <div class="stat-card"><div class="stat-value" id="stat-members">—</div><div class="stat-label">Community Members</div></div>
       </div>
+      <div id="encourage-wrap"></div>
       <div class="section-header">
-        <div class="section-title">X1 Carbon Fleet — 10 Printers</div>
+        <div class="section-title" id="fleet-title">Bambu X1 Carbon Fleet</div>
       </div>
-      <div class="printers-grid" id="printers-grid"></div>
+      <div class="printers-grid" id="printers-grid"><div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--muted);font-family:var(--mono);font-size:12px;letter-spacing:.1em">INITIALIZING PRINTER FLEET...</div></div>
     </div>
 
-    <!-- ACTIVITY TAB -->
+    <!-- ACTIVITY -->
     <div class="tab-content" id="content-activity">
-      <div class="section-header">
-        <div class="section-title">Print History</div>
-      </div>
-      <div class="feed" id="activity-feed">
-        <div class="empty-state"><div class="icon">📋</div><p>No print jobs yet. Claim a printer to get started.</p></div>
-      </div>
+      <div class="section-header"><div class="section-title">Print History</div></div>
+      <div class="feed" id="activity-feed"><div class="empty-state"><div class="icon">📋</div><p>No print jobs yet. Claim a printer to get started.</p></div></div>
     </div>
 
-    <!-- COMMUNITY TAB -->
+    <!-- COMMUNITY -->
     <div class="tab-content" id="content-community">
       <div class="section-header">
         <div class="section-title">Project Showcase</div>
-        <button class="btn btn-ghost btn-sm" onclick="openPostModal()">+ Share a Project</button>
+        <button class="btn btn-ghost btn-sm" onclick="openPostModal()">+ Share Your Work</button>
       </div>
-      <div class="community-grid" id="community-grid">
-        <div class="empty-state" style="grid-column: 1/-1"><div class="icon">✨</div><p>Be the first to share a project.</p></div>
+      <div class="filter-row">
+        <button class="filter-btn active" onclick="filterCommunity('all',this)">All</button>
+        <button class="filter-btn" onclick="filterCommunity('course',this)">Course</button>
+        <button class="filter-btn" onclick="filterCommunity('personal',this)">Personal</button>
+        <button class="filter-btn" onclick="filterCommunity('club',this)">Club</button>
+        <button class="filter-btn" onclick="filterCommunity('research',this)">Research</button>
       </div>
+      <div id="community-container"></div>
     </div>
 
-    <!-- BADGES TAB -->
+    <!-- BADGES -->
     <div class="tab-content" id="content-badges">
-      <div class="section-header">
-        <div class="section-title">Your Badges</div>
-      </div>
+      <div class="encourage-banner"><div class="icon">🎯</div><p>Complete prints, share projects, and help others to unlock badges. Every maker here started with zero — <strong>your first badge is one print away.</strong></p></div>
+      <div class="section-header"><div class="section-title">Your Badges</div></div>
       <div class="badges-grid" id="badges-grid"></div>
     </div>
 
-    <!-- ADMIN TAB -->
+    <!-- ADMIN -->
     <div class="tab-content" id="content-admin">
-      <div class="section-header">
-        <div class="section-title">All Print Jobs</div>
-      </div>
-      <div class="stat-card" style="margin-bottom:1.2rem;padding:1rem 1.2rem;">
-        <div style="font-size:12px;color:var(--muted);margin-bottom:0.75rem;">Simulate a Printer Event (for demo without real Bambu printers)</div>
-        <div style="display:flex;gap:0.75rem;flex-wrap:wrap;">
-          <button class="btn btn-ghost btn-sm" onclick="adminSimulate('start')">▶ Simulate Print Start</button>
-          <button class="btn btn-ghost btn-sm" onclick="adminSimulate('done')">✓ Simulate Print Done</button>
-          <button class="btn btn-ghost btn-sm" onclick="adminSimulate('fail')">✗ Simulate Print Fail</button>
+      <!-- Printer Management -->
+      <div class="admin-section">
+        <div class="admin-section-title">Printer Fleet Management</div>
+        <div class="printer-admin-grid" id="admin-printer-grid"></div>
+        <div style="display:flex;gap:.75rem;flex-wrap:wrap">
+          <button class="btn btn-ghost btn-sm" onclick="openModal('add-printer-modal')">+ Add Printer</button>
         </div>
       </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Student</th>
-              <th>Printer</th>
-              <th>Job Name</th>
-              <th>Type</th>
-              <th>Material</th>
-              <th>Status</th>
-              <th>Started</th>
-              <th>Feedback</th>
-            </tr>
-          </thead>
+      <!-- User Management -->
+      <div class="admin-section">
+        <div class="admin-section-title">Student Accounts</div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Name</th><th>Email</th><th>Program</th><th>Prints</th><th>Posts</th><th>Joined</th><th>Admin</th></tr></thead>
+          <tbody id="admin-users-body"></tbody>
+        </table></div>
+      </div>
+      <!-- Print Jobs -->
+      <div class="admin-section">
+        <div class="admin-section-title">All Print Jobs</div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Student</th><th>Printer</th><th>Job</th><th>Type</th><th>Material</th><th>Status</th><th>Started</th><th>Actions</th></tr></thead>
           <tbody id="admin-table-body"></tbody>
-        </table>
+        </table></div>
       </div>
     </div>
 
   </div>
 </div>
 
-<!-- ── CLAIM PRINTER MODAL ── -->
+<!-- CLAIM MODAL -->
 <div class="modal-overlay" id="claim-modal">
   <div class="modal">
     <div class="modal-title">Claim Printer <span id="claim-printer-label" style="color:var(--orange)"></span></div>
-    <div class="modal-sub">Fill in details before you start. This ties your name to the job.</div>
-    <div class="field">
-      <label>Job / Project Name</label>
-      <input type="text" id="claim-jobname" placeholder="e.g. DTC Final Prototype, Shelf Bracket...">
-    </div>
-    <div class="field">
-      <label>Print Type</label>
+    <div class="modal-sub">Tag your print before you start — this keeps everyone accountable and helps us give better feedback.</div>
+    <div class="field"><label>Project Name</label><input type="text" id="claim-jobname" placeholder="e.g. DTC Final Prototype, Ergonomic Grip..."></div>
+    <div class="field"><label>Print Type</label>
       <select id="claim-type">
         <option value="course">Course Project</option>
         <option value="personal">Personal Project</option>
@@ -914,51 +344,36 @@
         <option value="research">Research</option>
       </select>
     </div>
-    <div class="field">
-      <label>Course (if applicable)</label>
-      <input type="text" id="claim-course" placeholder="e.g. DTC 101, MaDE 340, ME 222...">
-    </div>
-    <div class="field">
-      <label>Material</label>
+    <div class="field"><label>Course (if applicable)</label><input type="text" id="claim-course" placeholder="e.g. DTC 101, MaDE 340, ME 222..."></div>
+    <div class="field"><label>Material</label>
       <select id="claim-material">
-        <option value="PLA">PLA</option>
-        <option value="PETG">PETG</option>
-        <option value="ABS">ABS</option>
-        <option value="TPU">TPU</option>
-        <option value="ASA">ASA</option>
-        <option value="PA">Nylon (PA)</option>
+        <option value="PLA">PLA</option><option value="PETG">PETG</option><option value="ABS">ABS</option>
+        <option value="TPU">TPU</option><option value="ASA">ASA</option><option value="PA">Nylon (PA)</option>
       </select>
     </div>
-    <div class="field">
-      <label>Notes (orientation, settings, split strategy...)</label>
-      <textarea id="claim-notes" placeholder="Optional: describe your print approach, any unusual settings, etc."></textarea>
-    </div>
+    <div class="field"><label>Notes (orientation, settings, any tricky parts?)</label><textarea id="claim-notes" placeholder="Optional but helpful for feedback..."></textarea></div>
     <div class="modal-footer">
-      <button class="btn btn-primary" style="flex:1" onclick="submitClaim()">Claim Printer & Start</button>
+      <button class="btn btn-primary" style="flex:1" onclick="submitClaim()">🚀 Start Print</button>
       <button class="btn btn-ghost" onclick="closeModal('claim-modal')">Cancel</button>
     </div>
   </div>
 </div>
 
-<!-- ── POST PROJECT MODAL ── -->
+<!-- POST MODAL -->
 <div class="modal-overlay" id="post-modal">
-  <div class="modal post-modal">
-    <div class="modal-title">Share a Project</div>
-    <div class="modal-sub">Show the community what you made at Corner Makery.</div>
-    <div class="field">
-      <label>Project Title</label>
-      <input type="text" id="post-title" placeholder="e.g. Ergonomic Phone Stand, RC Car Chassis...">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-title">Share Your Work ✨</div>
+    <div class="modal-sub">Every project you share inspires someone else at the Makery. Don't be shy — show it off.</div>
+    <div class="field"><label>Project Title</label><input type="text" id="post-title" placeholder="e.g. Ergonomic Phone Stand, RC Car Chassis..."></div>
+    <div class="field"><label>Photo</label>
+      <div class="upload-area" id="upload-area">
+        <input type="file" accept="image/*" onchange="handleImageUpload(event)">
+        <div id="upload-hint">📸 Click or drag a photo here</div>
+        <img id="upload-preview" class="upload-preview">
+      </div>
     </div>
-    <div class="field">
-      <label>Description</label>
-      <textarea id="post-desc" placeholder="What is it? What was tricky? What did you learn?"></textarea>
-    </div>
-    <div class="field">
-      <label>Photo URL (optional — paste an image link)</label>
-      <input type="text" id="post-image" placeholder="https://...">
-    </div>
-    <div class="field">
-      <label>Tags</label>
+    <div class="field"><label>Tell us about it</label><textarea id="post-desc" placeholder="What is it? What was the hardest part? What would you do differently?"></textarea></div>
+    <div class="field"><label>Category</label>
       <select id="post-tag">
         <option value="course">Course Project</option>
         <option value="personal">Personal</option>
@@ -973,199 +388,219 @@
   </div>
 </div>
 
-<!-- ── TOAST ── -->
+<!-- ADD PRINTER MODAL -->
+<div class="modal-overlay" id="add-printer-modal">
+  <div class="modal">
+    <div class="modal-title">Add Printer</div>
+    <div class="modal-sub">Add a new printer to the fleet.</div>
+    <div class="field"><label>Printer ID</label><input type="text" id="new-printer-id" placeholder="e.g. X1C-11"></div>
+    <div class="field"><label>Model</label>
+      <select id="new-printer-model">
+        <option value="X1 Carbon">Bambu X1 Carbon</option>
+        <option value="P1S">Bambu P1S</option>
+        <option value="P2S">Bambu P2S</option>
+        <option value="A1">Bambu A1</option>
+      </select>
+    </div>
+    <div class="field"><label>Location / Notes</label><input type="text" id="new-printer-location" placeholder="e.g. Station 3, left side"></div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" style="flex:1" onclick="addPrinter()">Add Printer</button>
+      <button class="btn btn-ghost" onclick="closeModal('add-printer-modal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- UPDATE PRINTER STATUS MODAL -->
+<div class="modal-overlay" id="status-modal">
+  <div class="modal">
+    <div class="modal-title">Update <span id="status-printer-label" style="color:var(--orange)"></span></div>
+    <div class="modal-sub">Manually update this printer's status.</div>
+    <div style="display:flex;flex-direction:column;gap:.6rem">
+      <button class="btn btn-success" onclick="adminSetStatus('idle')">✓ Set to Idle (print done)</button>
+      <button class="btn btn-warning" onclick="adminSetStatus('paused')">⏸ Set to Paused</button>
+      <button class="btn btn-danger" onclick="adminSetStatus('failed')">✗ Mark as Failed</button>
+      <button class="btn btn-danger" style="opacity:.7" onclick="adminRemovePrinter()">🗑 Remove Printer</button>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" style="flex:1" onclick="closeModal('status-modal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
-<!-- ── FIREBASE ── -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 <script>
 firebase.initializeApp({
-  apiKey: "AIzaSyBn3lPZgk3Q_HkZmtMowxXa4dW3xDyl1FA",
-  authDomain: "makerspace-software.firebaseapp.com",
-  projectId: "makerspace-software",
-  storageBucket: "makerspace-software.firebasestorage.app",
-  messagingSenderId: "914241807910",
-  appId: "1:914241807910:web:e0ab1095423ae5540068e7"
+  apiKey:"AIzaSyBn3lPZgk3Q_HkZmtMowxXa4dW3xDyl1FA",
+  authDomain:"makerspace-software.firebaseapp.com",
+  projectId:"makerspace-software",
+  storageBucket:"makerspace-software.firebasestorage.app",
+  messagingSenderId:"914241807910",
+  appId:"1:914241807910:web:e0ab1095423ae5540068e7"
 });
 const auth = firebase.auth();
 const db = firebase.firestore();
+const storage = firebase.storage();
 const TS = () => firebase.firestore.FieldValue.serverTimestamp();
-const INC = (n) => firebase.firestore.FieldValue.increment(n);
+const INC = n => firebase.firestore.FieldValue.increment(n);
 
-let currentUser = null;
-let currentUserData = null;
-let selectedPrinter = null;
-const PRINTER_COUNT = 10;
-const ADMIN_EMAILS = ['admin@u.northwestern.edu'];
+let currentUser = null, currentUserData = null, selectedPrinter = null, adminSelectedPrinter = null;
+let allPosts = [], communityFilter = 'all', uploadedImageUrl = null, appInited = false;
 
 const BADGES = [
-  { id: 'first_print', icon: '🚀', name: 'First Print', desc: 'Completed your first print', condition: d => d.printCount >= 1 },
-  { id: 'five_prints', icon: '🔥', name: 'Getting Warmed Up', desc: '5 prints completed', condition: d => d.printCount >= 5 },
-  { id: 'ten_prints', icon: '🏆', name: 'Power User', desc: '10 prints completed', condition: d => d.printCount >= 10 },
-  { id: 'shared_project', icon: '✨', name: 'Showoff', desc: 'Posted to the community showcase', condition: d => d.postCount >= 1 },
-  { id: 'gave_feedback', icon: '💬', name: 'Good Mentor', desc: "Left feedback on someone's print", condition: d => d.feedbackGiven >= 1 },
-  { id: 'course_print', icon: '📚', name: 'Academic Maker', desc: 'Completed a course project print', condition: d => d.coursePrints >= 1 },
-  { id: 'multi_material', icon: '🎨', name: 'Material Explorer', desc: 'Printed in 3 different materials', condition: d => (d.materials || []).length >= 3 },
-  { id: 'early_bird', icon: '🌅', name: 'Early Bird', desc: 'Started a print before 8am', condition: d => d.earlyBird },
+  {id:'first_print',icon:'🚀',name:'First Print',desc:'Completed your first print',condition:d=>d.printCount>=1},
+  {id:'five_prints',icon:'🔥',name:'Getting Warmed Up',desc:'5 prints completed',condition:d=>d.printCount>=5},
+  {id:'ten_prints',icon:'🏆',name:'Power User',desc:'10 prints completed',condition:d=>d.printCount>=10},
+  {id:'shared_project',icon:'✨',name:'Showoff',desc:'Posted to the community showcase',condition:d=>d.postCount>=1},
+  {id:'gave_feedback',icon:'💬',name:'Good Mentor',desc:"Left feedback on someone's print",condition:d=>d.feedbackGiven>=1},
+  {id:'course_print',icon:'📚',name:'Academic Maker',desc:'Completed a course project print',condition:d=>d.coursePrints>=1},
+  {id:'multi_material',icon:'🎨',name:'Material Explorer',desc:'Printed in 3 different materials',condition:d=>(d.materials||[]).length>=3},
+  {id:'early_bird',icon:'🌅',name:'Early Bird',desc:'Started a print before 8am',condition:d=>d.earlyBird},
 ];
 
-// ── Toast ──
-window.toast = (msg, duration = 3500) => {
+window.toast = (msg, duration=3500) => {
   const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.style.display = 'block';
-  clearTimeout(t._timer);
-  t._timer = setTimeout(() => t.style.display = 'none', duration);
+  t.textContent = msg; t.style.display = 'block';
+  clearTimeout(t._t); t._t = setTimeout(()=>t.style.display='none', duration);
 };
 
-// ── Auth UI ──
 window.toggleAuthMode = () => {
-  const login = document.getElementById('login-form');
-  const signup = document.getElementById('signup-form');
-  const isLogin = login.style.display !== 'none';
-  login.style.display = isLogin ? 'none' : 'block';
-  signup.style.display = isLogin ? 'block' : 'none';
+  const l = document.getElementById('login-form'), s = document.getElementById('signup-form');
+  const isLogin = l.style.display !== 'none';
+  l.style.display = isLogin ? 'none' : 'block';
+  s.style.display = isLogin ? 'block' : 'none';
 };
 
 window.doLogin = async () => {
   const email = document.getElementById('login-email').value.trim();
   const pass = document.getElementById('login-password').value;
-  if (!email || !pass) return toast('Please enter email and password');
-  try {
-    await auth.signInWithEmailAndPassword(email, pass);
-  } catch (e) {
-    toast('Login failed: ' + (e.code === 'auth/too-many-requests' ? 'Too many attempts — wait a few minutes' : e.code === 'auth/invalid-credential' ? 'Wrong email or password' : e.message));
-  }
+  if (!email||!pass) return toast('Please enter email and password');
+  try { await auth.signInWithEmailAndPassword(email, pass); }
+  catch(e) { toast('Login failed: ' + (e.code==='auth/too-many-requests'?'Too many attempts — wait a few minutes':e.code==='auth/invalid-credential'?'Wrong email or password':e.message)); }
 };
 
 window.doSignup = async () => {
-  const first = document.getElementById('signup-first').value.trim();
-  const last = document.getElementById('signup-last').value.trim();
-  const email = document.getElementById('signup-email').value.trim();
-  const program = document.getElementById('signup-program').value.trim();
-  const pass = document.getElementById('signup-password').value;
-  if (!first || !last || !email || !pass) return toast('Please fill in all fields');
+  const first=document.getElementById('signup-first').value.trim();
+  const last=document.getElementById('signup-last').value.trim();
+  const email=document.getElementById('signup-email').value.trim();
+  const program=document.getElementById('signup-program').value;
+  const pass=document.getElementById('signup-password').value;
+  if (!first||!last||!email||!pass) return toast('Please fill in all fields');
   try {
     const cred = await auth.createUserWithEmailAndPassword(email, pass);
-    await cred.user.updateProfile({ displayName: first + ' ' + last });
+    await cred.user.updateProfile({displayName: first+' '+last});
     await db.collection('users').doc(cred.user.uid).set({
-      name: first + ' ' + last,
-      email, program,
-      printCount: 0, postCount: 0, feedbackGiven: 0, coursePrints: 0,
-      materials: [], earlyBird: false, badges: [], isAdmin: false,
-      joinedAt: TS()
+      name:first+' '+last, email, program,
+      printCount:0, postCount:0, feedbackGiven:0, coursePrints:0,
+      materials:[], earlyBird:false, badges:[], isAdmin:false, joinedAt:TS()
     });
-    // onAuthStateChanged will fire and handle the redirect
-  } catch (e) {
-    toast('Signup failed: ' + e.message);
-  }
+  } catch(e) { toast('Signup failed: '+e.message); }
 };
 
-window.doLogout = async () => {
-  await auth.signOut();
-};
+window.doLogout = () => auth.signOut();
 
-// ── Auth state ──
 auth.onAuthStateChanged(async user => {
   if (user) {
     currentUser = user;
     try {
       const snap = await db.collection('users').doc(user.uid).get();
-      currentUserData = snap.exists ? snap.data() : { name: user.displayName || user.email, isAdmin: false, printCount: 0, postCount: 0, feedbackGiven: 0, materials: [], badges: [] };
+      currentUserData = snap.exists ? snap.data() : {name:user.displayName||user.email,isAdmin:false,printCount:0,postCount:0,feedbackGiven:0,materials:[],badges:[]};
     } catch(e) {
-      currentUserData = { name: user.displayName || user.email, isAdmin: false, printCount: 0, postCount: 0, feedbackGiven: 0, materials: [], badges: [] };
+      currentUserData = {name:user.displayName||user.email,isAdmin:false,printCount:0,postCount:0,feedbackGiven:0,materials:[],badges:[]};
     }
-    const initials = (currentUserData.name || user.email).split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
+    const initials = (currentUserData.name||user.email).split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
     document.getElementById('user-avatar').textContent = initials;
-    if (ADMIN_EMAILS.includes(user.email) || currentUserData.isAdmin) {
-      document.getElementById('tab-admin').style.display = '';
-    }
+    if (currentUserData.isAdmin) document.getElementById('tab-admin').style.display = '';
     document.getElementById('auth-screen').style.display = 'none';
     document.getElementById('app').style.display = 'block';
-    initApp();
+    if (!appInited) { appInited=true; initApp(); }
   } else {
-    currentUser = null;
-    currentUserData = null;
+    currentUser=null; currentUserData=null; appInited=false;
     document.getElementById('auth-screen').style.display = 'flex';
     document.getElementById('app').style.display = 'none';
   }
 });
 
-// ── App init ──
-let appInited = false;
 async function initApp() {
-  if (appInited) return;
-  appInited = true;
-  document.getElementById('printers-grid').innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--muted);font-family:var(--mono);font-size:12px;letter-spacing:0.1em">INITIALIZING PRINTER FLEET...</div>`;
   await seedPrinters();
   listenPrinters();
   listenActivity();
   listenCommunity();
   listenStats();
   renderBadges();
+  showEncourageBanner();
+  if (currentUserData.isAdmin) { listenAdminPrinters(); listenAdminUsers(); }
 }
 
-// ── Seed printers ──
+function showEncourageBanner() {
+  const wrap = document.getElementById('encourage-wrap');
+  const name = (currentUserData.name||'').split(' ')[0];
+  const count = currentUserData.printCount||0;
+  let msg = count===0
+    ? `<strong>Welcome to the Makery, ${name}!</strong> Click any idle printer below to claim it and start your first print. The printers are yours to use — go build something.`
+    : count<5 ? `<strong>Nice, ${name}! ${count} print${count===1?'':'s'} down.</strong> Keep going — you're building momentum. Share your work in Community when you're done.`
+    : `<strong>${count} prints and counting, ${name}.</strong> You're one of Corner Makery's most active makers. Consider leaving feedback on others' prints — your experience helps the whole community.`;
+  wrap.innerHTML = `<div class="encourage-banner"><div class="icon">${count===0?'👋':count<5?'⚡':'🏆'}</div><p>${msg}</p></div>`;
+}
+
 async function seedPrinters() {
+  const snap = await db.collection('printers').get();
+  const existing = new Set(snap.docs.map(d=>d.id));
   const promises = [];
-  for (let i = 1; i <= PRINTER_COUNT; i++) {
-    const id = 'X1C-' + String(i).padStart(2,'0');
-    promises.push(
-      db.collection('printers').doc(id).get().then(snap => {
-        if (!snap.exists) {
-          return db.collection('printers').doc(id).set({ id, model: 'X1 Carbon', status: 'idle', currentJob: null, updatedAt: TS() });
-        }
-      })
-    );
+  for (let i=1;i<=10;i++) {
+    const id = 'X1C-'+String(i).padStart(2,'0');
+    if (!existing.has(id)) promises.push(db.collection('printers').doc(id).set({id,model:'X1 Carbon',status:'idle',currentJob:null,location:'',updatedAt:TS()}));
   }
   await Promise.all(promises);
 }
 
-// ── Printers ──
 function listenPrinters() {
   db.collection('printers').onSnapshot(snap => {
     const printers = {};
-    snap.forEach(d => printers[d.id] = d.data());
+    snap.forEach(d => printers[d.id]=d.data());
     renderPrinters(printers);
+    const count = Object.keys(printers).length;
+    document.getElementById('fleet-title').textContent = `Bambu X1 Carbon Fleet — ${count} Printer${count!==1?'s':''}`;
   });
 }
 
 function renderPrinters(printers) {
   const grid = document.getElementById('printers-grid');
   grid.innerHTML = '';
-  Object.values(printers).sort((a,b) => a.id.localeCompare(b.id)).forEach(p => {
+  Object.values(printers).sort((a,b)=>a.id.localeCompare(b.id)).forEach(p => {
     const card = document.createElement('div');
-    card.className = 'printer-card ' + p.status;
+    card.className = 'printer-card '+(p.status||'idle');
     const job = p.currentJob;
-    const isMine = job && currentUser && job.userId === currentUser.uid;
+    const isMine = job && currentUser && job.userId===currentUser.uid;
     card.innerHTML = `
       <div class="printer-header">
-        <div><div class="printer-id">${p.id}</div><div class="printer-model">${p.model}</div></div>
-        <div class="status-pill ${p.status}">${p.status}</div>
+        <div><div class="printer-id">${p.id}</div><div class="printer-model">${p.model||'X1 Carbon'}${p.location?' · '+p.location:''}</div></div>
+        <div class="status-pill ${p.status||'idle'}">${p.status||'idle'}</div>
       </div>
-      ${p.status === 'idle' ? `<div class="printer-info">Ready to print</div><div class="claim-hint">↗ Click to claim this printer</div>`
-      : job ? `<div class="printer-info"><strong>${job.jobName}</strong><br>${job.userName} · ${job.material}<br><span class="feed-tag tag-${job.type}" style="display:inline-flex;margin-top:3px">${job.type}</span>${job.course ? '<br>' + job.course : ''}</div>${job.progress !== undefined ? `<div class="progress-bar"><div class="progress-fill" style="width:${job.progress}%"></div></div><div style="font-family:var(--mono);font-size:10px;color:var(--muted)">${job.progress}% complete</div>` : ''}${isMine ? '<div class="claim-hint" style="color:var(--orange)">▶ Your print — click to mark complete</div>' : ''}` : ''}
+      ${p.status==='idle'
+        ? `<div class="printer-info" style="color:var(--green)">✓ Ready to print</div><div class="claim-hint">↗ Click to claim this printer</div>`
+        : job ? `<div class="printer-info"><strong>${job.jobName}</strong><br>${job.userName} · ${job.material}<br><span class="feed-tag tag-${job.type}" style="display:inline-flex;margin-top:3px">${job.type}</span>${job.course?'<br>'+job.course:''}</div>${isMine?'<div class="claim-hint" style="color:var(--orange)">▶ Your print — click to mark complete</div>':''}` : ''}
     `;
     card.onclick = () => openClaimOrManage(p);
     grid.appendChild(card);
   });
 }
 
-window.openClaimOrManage = async (printer) => {
-  if (printer.status === 'idle') {
-    selectedPrinter = printer;
-    document.getElementById('claim-printer-label').textContent = printer.id;
-    document.getElementById('claim-jobname').value = '';
-    document.getElementById('claim-notes').value = '';
+window.openClaimOrManage = async p => {
+  if (p.status==='idle') {
+    selectedPrinter = p;
+    document.getElementById('claim-printer-label').textContent = p.id;
+    document.getElementById('claim-jobname').value='';
+    document.getElementById('claim-notes').value='';
     openModal('claim-modal');
-  } else if (printer.currentJob && printer.currentJob.userId === currentUser.uid) {
-    if (confirm('Mark print on ' + printer.id + ' as complete?')) {
-      await completePrint(printer.id, 'success');
-    }
+  } else if (p.currentJob && p.currentJob.userId===currentUser.uid) {
+    if (confirm('Mark print on '+p.id+' as complete?')) await completePrint(p.id,'success');
   } else {
-    toast(printer.id + ' is in use by ' + (printer.currentJob ? printer.currentJob.userName : 'another student'));
+    toast(p.id+' is in use by '+(p.currentJob?p.currentJob.userName:'another student'));
   }
 };
 
@@ -1175,178 +610,315 @@ window.submitClaim = async () => {
   const course = document.getElementById('claim-course').value.trim();
   const material = document.getElementById('claim-material').value;
   const notes = document.getElementById('claim-notes').value.trim();
-  if (!jobName) return toast('Please enter a job name');
-
+  if (!jobName) return toast('Please enter a project name');
   const now = new Date();
-  const jobData = {
-    userId: currentUser.uid,
-    userName: currentUserData.name || currentUser.email,
-    jobName, type, course, material, notes,
-    printerId: selectedPrinter.id,
-    status: 'printing', progress: 0,
-    startedAt: TS(), earlyBird: now.getHours() < 8
-  };
-
-  const jobRef = await db.collection('printJobs').add(jobData);
-  await db.collection('printers').doc(selectedPrinter.id).update({ status: 'printing', currentJob: Object.assign({}, jobData, { jobId: jobRef.id }), updatedAt: TS() });
-
-  const updates = { printCount: INC(1) };
-  if (type === 'course') updates.coursePrints = INC(1);
-  if (now.getHours() < 8) updates.earlyBird = true;
-  const userSnap = await db.collection('users').doc(currentUser.uid).get();
-  const existingMats = userSnap.data().materials || [];
-  if (!existingMats.includes(material)) updates.materials = [...existingMats, material];
+  const jobData = {userId:currentUser.uid,userName:currentUserData.name||currentUser.email,jobName,type,course,material,notes,printerId:selectedPrinter.id,status:'printing',progress:0,startedAt:TS(),earlyBird:now.getHours()<8};
+  const ref = await db.collection('printJobs').add(jobData);
+  await db.collection('printers').doc(selectedPrinter.id).update({status:'printing',currentJob:Object.assign({},jobData,{jobId:ref.id}),updatedAt:TS()});
+  const updates = {printCount:INC(1)};
+  if (type==='course') updates.coursePrints=INC(1);
+  if (now.getHours()<8) updates.earlyBird=true;
+  const uSnap = await db.collection('users').doc(currentUser.uid).get();
+  const mats = uSnap.data().materials||[];
+  if (!mats.includes(material)) updates.materials=[...mats,material];
   await db.collection('users').doc(currentUser.uid).update(updates);
-
   closeModal('claim-modal');
-  toast('Printer claimed! Happy printing 🚀');
+  toast('🚀 Printer claimed! Go make something great.');
   checkBadges();
 };
 
 async function completePrint(printerId, outcome) {
   const jobs = await db.collection('printJobs').where('printerId','==',printerId).where('status','==','printing').get();
-  jobs.forEach(d => d.ref.update({ status: outcome, completedAt: TS() }));
-  await db.collection('printers').doc(printerId).update({ status: 'idle', currentJob: null, updatedAt: TS() });
-  toast(outcome === 'success' ? '✅ Print marked complete!' : '❌ Print marked as failed');
+  const batch = db.batch();
+  jobs.forEach(d => batch.update(d.ref,{status:outcome,completedAt:TS()}));
+  await batch.commit();
+  await db.collection('printers').doc(printerId).update({status:'idle',currentJob:null,updatedAt:TS()});
+  toast(outcome==='success'?'✅ Print complete! Share it in Community 👀':'❌ Print marked as failed');
+  currentUserData = (await db.collection('users').doc(currentUser.uid).get()).data();
+  showEncourageBanner();
   checkBadges();
 }
 
-// ── Activity ──
 function listenActivity() {
   db.collection('printJobs').orderBy('startedAt','desc').onSnapshot(snap => {
-    const jobs = snap.docs.map(d => Object.assign({ id: d.id }, d.data()));
+    const jobs = snap.docs.map(d=>Object.assign({id:d.id},d.data()));
     renderActivity(jobs);
-    renderAdminTable(jobs);
     updateStats(jobs);
+    if (currentUserData.isAdmin) renderAdminTable(jobs);
   });
 }
 
 function renderActivity(jobs) {
   const feed = document.getElementById('activity-feed');
-  if (!jobs.length) { feed.innerHTML = '<div class="empty-state"><div class="icon">📋</div><p>No print jobs yet. Claim a printer to get started.</p></div>'; return; }
+  if (!jobs.length) { feed.innerHTML='<div class="empty-state"><div class="icon">📋</div><p>No print jobs yet. Be the first to claim a printer!</p></div>'; return; }
   feed.innerHTML = jobs.map(job => {
-    const initials = (job.userName || '?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
-    const time = job.startedAt && job.startedAt.toDate ? job.startedAt.toDate().toLocaleString() : '—';
-    const feedbacks = job.feedback || [];
+    const initials = (job.userName||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    const time = job.startedAt&&job.startedAt.toDate?job.startedAt.toDate().toLocaleString():'—';
+    const fbs = job.feedback||[];
     return `<div class="feed-item">
       <div class="feed-avatar">${initials}</div>
       <div class="feed-body">
         <div class="feed-top"><span class="feed-name">${job.userName}</span><span class="feed-tag tag-${job.type}">${job.type}</span><span style="font-family:var(--mono);font-size:10px;color:var(--muted)">${job.printerId}</span></div>
-        <div class="feed-meta">${job.material} · ${job.course || 'No course'} · ${time}</div>
-        <div class="feed-desc"><strong>${job.jobName}</strong>${job.notes ? '<br><span style="color:var(--muted)">'+job.notes+'</span>' : ''}</div>
+        <div class="feed-meta">${job.material}${job.course?' · '+job.course:''} · ${time}</div>
+        <div class="feed-desc"><strong>${job.jobName}</strong>${job.notes?'<br><span style="color:var(--muted)">'+job.notes+'</span>':''}</div>
         <span class="feed-outcome outcome-${job.status==='printing'?'active':job.status}">${job.status==='printing'?'▶ In Progress':job.status==='success'?'✓ Completed':'✗ Failed'}</span>
-        ${feedbacks.length ? '<div class="feedback-section">'+feedbacks.map(f=>`<div class="feedback-item"><strong>${f.by}:</strong> ${f.text}</div>`).join('')+'</div>' : ''}
-        <div class="feedback-input-row"><input type="text" placeholder="Leave feedback or tips..." id="fb-${job.id}"><button class="btn btn-ghost btn-sm" onclick="submitFeedback('${job.id}')">Send</button></div>
+        ${fbs.length?'<div class="feedback-section">'+fbs.map(f=>`<div class="feedback-item"><strong>${f.by}:</strong> ${f.text}</div>`).join('')+'</div>':''}
+        <div class="feedback-input-row"><input type="text" placeholder="Leave tips or encouragement..." id="fb-${job.id}"><button class="btn btn-ghost btn-sm" onclick="submitFeedback('${job.id}')">Send</button></div>
       </div>
     </div>`;
   }).join('');
 }
 
-window.submitFeedback = async (jobId) => {
-  const input = document.getElementById('fb-' + jobId);
+window.submitFeedback = async jobId => {
+  const input = document.getElementById('fb-'+jobId);
   const text = input.value.trim();
   if (!text) return;
   const ref = db.collection('printJobs').doc(jobId);
   const snap = await ref.get();
-  const existing = snap.data().feedback || [];
-  existing.push({ by: currentUserData.name || currentUser.email, text, at: new Date().toISOString() });
-  await ref.update({ feedback: existing });
-  await db.collection('users').doc(currentUser.uid).update({ feedbackGiven: INC(1) });
-  input.value = '';
-  toast('Feedback sent!');
+  const existing = snap.data().feedback||[];
+  existing.push({by:currentUserData.name||currentUser.email,text,at:new Date().toISOString()});
+  await ref.update({feedback:existing});
+  await db.collection('users').doc(currentUser.uid).update({feedbackGiven:INC(1)});
+  input.value=''; toast('Feedback sent! 💬');
   checkBadges();
 };
 
-// ── Community ──
+// COMMUNITY with image upload + grouping
 function listenCommunity() {
   db.collection('posts').orderBy('createdAt','desc').onSnapshot(snap => {
-    const posts = snap.docs.map(d => Object.assign({ id: d.id }, d.data()));
-    renderCommunity(posts);
+    allPosts = snap.docs.map(d=>Object.assign({id:d.id},d.data()));
+    renderCommunity();
   });
 }
 
-function renderCommunity(posts) {
-  const grid = document.getElementById('community-grid');
-  if (!posts.length) { grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><div class="icon">✨</div><p>Be the first to share a project.</p></div>'; return; }
-  grid.innerHTML = posts.map(p => {
-    const liked = currentUser && (p.likedBy || []).includes(currentUser.uid);
-    return `<div class="project-card">
-      ${p.imageUrl ? `<img class="project-image" src="${p.imageUrl}" onerror="this.style.display='none'">` : '<div class="project-image-placeholder">NO PHOTO YET</div>'}
-      <div class="project-body"><div class="project-title">${p.title}</div><div class="project-meta">${p.userName} · <span class="feed-tag tag-${p.tag}">${p.tag}</span></div><div class="project-desc">${p.description}</div></div>
-      <div class="project-footer">
-        <button class="likes-btn ${liked?'liked':''}" onclick="toggleLike('${p.id}',${liked})">♥ ${(p.likedBy||[]).length} ${liked?'Liked':'Like'}</button>
-        <span style="font-size:11px;color:var(--muted)">${p.createdAt&&p.createdAt.toDate?p.createdAt.toDate().toLocaleDateString():''}</span>
+window.filterCommunity = (filter, btn) => {
+  communityFilter = filter;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderCommunity();
+};
+
+function renderCommunity() {
+  const container = document.getElementById('community-container');
+  const filtered = communityFilter==='all' ? allPosts : allPosts.filter(p=>p.tag===communityFilter);
+  if (!filtered.length) {
+    container.innerHTML='<div class="empty-state"><div class="icon">✨</div><p>No projects here yet — be the first to share!</p></div>';
+    return;
+  }
+  // Group by program
+  const byProgram = {};
+  filtered.forEach(p => {
+    const prog = p.userProgram||'Other';
+    if (!byProgram[prog]) byProgram[prog]=[];
+    byProgram[prog].push(p);
+  });
+  // Sort programs by count
+  const sorted = Object.entries(byProgram).sort((a,b)=>b[1].length-a[1].length);
+  container.innerHTML = sorted.map(([prog, posts]) => `
+    <div class="community-section">
+      <div class="community-section-title">${prog} · ${posts.length} project${posts.length!==1?'s':''}</div>
+      <div class="community-grid">
+        ${posts.map(p => {
+          const liked = currentUser && (p.likedBy||[]).includes(currentUser.uid);
+          return `<div class="project-card">
+            ${p.imageUrl?`<img class="project-image" src="${p.imageUrl}" loading="lazy" onerror="this.parentElement.querySelector('.project-image-placeholder').style.display='flex';this.style.display='none'">`:''}
+            <div class="project-image-placeholder" style="${p.imageUrl?'display:none':''}">NO PHOTO YET</div>
+            <div class="project-body">
+              <div class="project-title">${p.title}</div>
+              <div class="project-meta">${p.userName} <span class="feed-tag tag-${p.tag}">${p.tag}</span></div>
+              <div class="project-desc">${p.description}</div>
+            </div>
+            <div class="project-footer">
+              <button class="likes-btn ${liked?'liked':''}" onclick="toggleLike('${p.id}',${liked})">♥ ${(p.likedBy||[]).length} ${liked?'Liked':'Like'}</button>
+              <span style="font-size:11px;color:var(--muted)">${p.createdAt&&p.createdAt.toDate?p.createdAt.toDate().toLocaleDateString():''}</span>
+            </div>
+          </div>`;
+        }).join('')}
       </div>
-    </div>`;
-  }).join('');
+    </div>
+  `).join('');
 }
 
 window.toggleLike = async (postId, isLiked) => {
   const ref = db.collection('posts').doc(postId);
   const snap = await ref.get();
-  let likes = snap.data().likedBy || [];
-  likes = isLiked ? likes.filter(id => id !== currentUser.uid) : [...likes, currentUser.uid];
-  await ref.update({ likedBy: likes });
+  let likes = snap.data().likedBy||[];
+  likes = isLiked ? likes.filter(id=>id!==currentUser.uid) : [...likes,currentUser.uid];
+  await ref.update({likedBy:likes});
 };
 
-window.openPostModal = () => openModal('post-modal');
+// Image upload
+window.handleImageUpload = async e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (file.size > 5*1024*1024) return toast('Image too large — max 5MB');
+  const preview = document.getElementById('upload-preview');
+  const hint = document.getElementById('upload-hint');
+  const reader = new FileReader();
+  reader.onload = ev => { preview.src=ev.target.result; preview.style.display='block'; hint.textContent='📸 Photo selected — looking good!'; };
+  reader.readAsDataURL(file);
+  try {
+    const ref = storage.ref('posts/'+Date.now()+'_'+file.name);
+    await ref.put(file);
+    uploadedImageUrl = await ref.getDownloadURL();
+  } catch(e) {
+    // fallback: store as base64 if storage upload fails
+    uploadedImageUrl = await new Promise(res => { const r=new FileReader(); r.onload=ev=>res(ev.target.result); r.readAsDataURL(file); });
+  }
+};
+
+window.openPostModal = () => {
+  uploadedImageUrl = null;
+  document.getElementById('upload-preview').style.display='none';
+  document.getElementById('upload-hint').textContent='📸 Click or drag a photo here';
+  document.getElementById('post-title').value='';
+  document.getElementById('post-desc').value='';
+  openModal('post-modal');
+};
 
 window.submitPost = async () => {
   const title = document.getElementById('post-title').value.trim();
   const desc = document.getElementById('post-desc').value.trim();
-  const imageUrl = document.getElementById('post-image').value.trim();
   const tag = document.getElementById('post-tag').value;
-  if (!title || !desc) return toast('Please add a title and description');
-  await db.collection('posts').add({ title, description: desc, imageUrl: imageUrl || null, tag, userName: currentUserData.name || currentUser.email, userId: currentUser.uid, likedBy: [], createdAt: TS() });
-  await db.collection('users').doc(currentUser.uid).update({ postCount: INC(1) });
+  if (!title||!desc) return toast('Please add a title and description');
+  await db.collection('posts').add({
+    title, description:desc, imageUrl:uploadedImageUrl||null, tag,
+    userName:currentUserData.name||currentUser.email,
+    userProgram:currentUserData.program||'Other',
+    userId:currentUser.uid, likedBy:[], createdAt:TS()
+  });
+  await db.collection('users').doc(currentUser.uid).update({postCount:INC(1)});
   closeModal('post-modal');
-  toast('Project posted! ✨');
+  toast('🎉 Project posted! The community is going to love this.');
   checkBadges();
 };
 
-// ── Badges ──
+// BADGES
 async function checkBadges() {
   const snap = await db.collection('users').doc(currentUser.uid).get();
   const data = snap.data();
-  const earned = data.badges || [];
-  const newBadges = BADGES.filter(b => !earned.includes(b.id) && b.condition(data)).map(b => b.id);
-  if (newBadges.length) {
-    await db.collection('users').doc(currentUser.uid).update({ badges: [...earned, ...newBadges] });
-    newBadges.forEach(id => toast('🏅 Badge unlocked: ' + BADGES.find(b=>b.id===id).name + '!'));
-    setTimeout(renderBadges, 500);
+  const earned = data.badges||[];
+  const newOnes = BADGES.filter(b=>!earned.includes(b.id)&&b.condition(data));
+  if (newOnes.length) {
+    await db.collection('users').doc(currentUser.uid).update({badges:[...earned,...newOnes.map(b=>b.id)]});
+    newOnes.forEach(b=>toast('🏅 Badge unlocked: '+b.name+'!'));
+    setTimeout(renderBadges,500);
   }
 }
 
 async function renderBadges() {
   const snap = await db.collection('users').doc(currentUser.uid).get();
-  const earned = (snap.data() || {}).badges || [];
+  const earned = (snap.data()||{}).badges||[];
   document.getElementById('badges-grid').innerHTML = BADGES.map(b => {
-    const isEarned = earned.includes(b.id);
-    return `<div class="badge-card ${isEarned?'earned':'locked'}"><div class="badge-icon">${b.icon}</div><div class="badge-name">${b.name}</div><div class="badge-desc">${b.desc}</div>${isEarned?'<div style="font-family:var(--mono);font-size:10px;color:var(--orange);margin-top:0.5rem">✓ EARNED</div>':''}</div>`;
+    const yes = earned.includes(b.id);
+    return `<div class="badge-card ${yes?'earned':'locked'}">
+      <div class="badge-icon">${b.icon}</div>
+      <div class="badge-name">${b.name}</div>
+      <div class="badge-desc">${b.desc}</div>
+      ${yes?'<div style="font-family:var(--mono);font-size:10px;color:var(--orange);margin-top:.5rem">✓ EARNED</div>':'<div style="font-size:11px;color:var(--muted);margin-top:.4rem">Keep printing...</div>'}
+    </div>`;
   }).join('');
 }
 
-// ── Stats ──
+// STATS
 async function listenStats() {
-  const snap = await db.collection('users').get();
-  document.getElementById('stat-members').textContent = snap.size;
+  db.collection('users').onSnapshot(snap => {
+    document.getElementById('stat-members').textContent = snap.size;
+  });
 }
 
 function updateStats(jobs) {
   const today = new Date(); today.setHours(0,0,0,0);
-  const active = jobs.filter(j => j.status === 'printing').length;
-  const todayPrints = jobs.filter(j => j.startedAt && j.startedAt.toDate && j.startedAt.toDate() >= today).length;
+  const active = jobs.filter(j=>j.status==='printing').length;
+  const todayPrints = jobs.filter(j=>j.startedAt&&j.startedAt.toDate&&j.startedAt.toDate()>=today).length;
   document.getElementById('stat-active').textContent = active;
-  document.getElementById('stat-idle').textContent = PRINTER_COUNT - active;
+  document.getElementById('stat-idle').textContent = 10-active;
   document.getElementById('stat-today').textContent = todayPrints;
 }
 
-// ── Admin ──
+// ADMIN
+function listenAdminPrinters() {
+  db.collection('printers').onSnapshot(snap => {
+    const printers = snap.docs.map(d=>d.data()).sort((a,b)=>a.id.localeCompare(b.id));
+    renderAdminPrinters(printers);
+  });
+}
+
+function renderAdminPrinters(printers) {
+  document.getElementById('admin-printer-grid').innerHTML = printers.map(p => `
+    <div class="printer-admin-card">
+      <div class="printer-id">${p.id} <span class="status-pill ${p.status||'idle'}" style="font-size:9px">${p.status||'idle'}</span></div>
+      <div style="font-size:11px;color:var(--muted)">${p.model||'X1 Carbon'}${p.location?' · '+p.location:''}</div>
+      ${p.currentJob?`<div style="font-size:11px;margin-top:.4rem;color:var(--text)"><strong>${p.currentJob.userName}</strong><br>${p.currentJob.jobName}</div>`:''}
+      <div class="printer-admin-actions">
+        <button class="btn btn-warning btn-sm" onclick="openAdminStatusModal('${p.id}')">⚙ Manage</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+window.openAdminStatusModal = id => {
+  adminSelectedPrinter = id;
+  document.getElementById('status-printer-label').textContent = id;
+  openModal('status-modal');
+};
+
+window.adminSetStatus = async status => {
+  if (status==='idle') {
+    await completePrint(adminSelectedPrinter, 'success');
+  } else {
+    await db.collection('printers').doc(adminSelectedPrinter).update({status,updatedAt:TS()});
+    toast('Printer '+adminSelectedPrinter+' updated to '+status);
+  }
+  closeModal('status-modal');
+};
+
+window.adminRemovePrinter = async () => {
+  if (!confirm('Remove '+adminSelectedPrinter+' from the fleet?')) return;
+  await db.collection('printers').doc(adminSelectedPrinter).delete();
+  closeModal('status-modal');
+  toast('Printer removed');
+};
+
+window.addPrinter = async () => {
+  const id = document.getElementById('new-printer-id').value.trim().toUpperCase();
+  const model = document.getElementById('new-printer-model').value;
+  const location = document.getElementById('new-printer-location').value.trim();
+  if (!id) return toast('Please enter a printer ID');
+  await db.collection('printers').doc(id).set({id,model,location,status:'idle',currentJob:null,updatedAt:TS()});
+  closeModal('add-printer-modal');
+  toast('Printer '+id+' added to the fleet ✓');
+};
+
+function listenAdminUsers() {
+  db.collection('users').orderBy('joinedAt','desc').onSnapshot(snap => {
+    const users = snap.docs.map(d=>Object.assign({id:d.id},d.data()));
+    const tbody = document.getElementById('admin-users-body');
+    tbody.innerHTML = users.map(u => {
+      const joined = u.joinedAt&&u.joinedAt.toDate?u.joinedAt.toDate().toLocaleDateString():'—';
+      return `<tr>
+        <td><strong>${u.name||'—'}</strong></td>
+        <td style="font-size:12px;color:var(--muted)">${u.email}</td>
+        <td>${u.program||'—'}</td>
+        <td>${u.printCount||0}</td>
+        <td>${u.postCount||0}</td>
+        <td style="font-size:12px;color:var(--muted)">${joined}</td>
+        <td><button class="btn btn-sm ${u.isAdmin?'btn-warning':'btn-ghost'}" onclick="toggleAdmin('${u.id}',${!!u.isAdmin})">${u.isAdmin?'Revoke':'Make Admin'}</button></td>
+      </tr>`;
+    }).join('');
+  });
+}
+
+window.toggleAdmin = async (uid, isAdmin) => {
+  await db.collection('users').doc(uid).update({isAdmin:!isAdmin});
+  toast(isAdmin?'Admin access revoked':'Admin access granted');
+};
+
 function renderAdminTable(jobs) {
   const tbody = document.getElementById('admin-table-body');
-  if (!jobs.length) { tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:2rem">No jobs yet</td></tr>'; return; }
+  if (!jobs.length) { tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:2rem">No jobs yet</td></tr>'; return; }
   tbody.innerHTML = jobs.map(j => {
-    const time = j.startedAt && j.startedAt.toDate ? j.startedAt.toDate().toLocaleString() : '—';
+    const time = j.startedAt&&j.startedAt.toDate?j.startedAt.toDate().toLocaleString():'—';
     return `<tr>
       <td><strong>${j.userName}</strong></td>
       <td><span style="font-family:var(--mono);font-size:12px">${j.printerId}</span></td>
@@ -1360,36 +932,18 @@ function renderAdminTable(jobs) {
   }).join('');
 }
 
-window.adminComplete = (printerId, outcome) => completePrint(printerId, outcome);
+window.adminComplete = (pid,outcome) => completePrint(pid,outcome);
 
-window.adminSimulate = async (type) => {
-  const pids = ['X1C-01','X1C-02','X1C-03','X1C-04','X1C-05'];
-  const names = ['Alex Chen','Maya Patel','Jordan Lee','Sam Williams','Taylor Kim'];
-  const mats = ['PLA','PETG','ABS','TPU'];
-  const jobNames = ['DTC Prototype','Shelf Bracket','Phone Stand','RC Car Wheel','Lab Fixture'];
-  const pid = pids[Math.floor(Math.random()*pids.length)];
-  if (type === 'start') {
-    const jobData = { userId:'sim-'+Date.now(), userName:names[Math.floor(Math.random()*names.length)], jobName:jobNames[Math.floor(Math.random()*jobNames.length)], type:'course', course:'DTC 101', material:mats[Math.floor(Math.random()*mats.length)], notes:'Simulated job', printerId:pid, status:'printing', progress:Math.floor(Math.random()*80)+10, startedAt:TS() };
-    const ref = await db.collection('printJobs').add(jobData);
-    await db.collection('printers').doc(pid).update({ status:'printing', currentJob:Object.assign({},jobData,{jobId:ref.id}), updatedAt:TS() });
-    toast('Simulated print started on ' + pid);
-  } else {
-    await completePrint(pid, type==='done'?'success':'failed');
-  }
-};
-
-// ── Nav ──
-window.setTab = (tab) => {
-  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+window.setTab = tab => {
+  document.querySelectorAll('.tab-content').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
   document.getElementById('content-'+tab).classList.add('active');
   document.getElementById('tab-'+tab).classList.add('active');
 };
 
-// ── Modals ──
-window.openModal = (id) => document.getElementById(id).classList.add('open');
-window.closeModal = (id) => document.getElementById(id).classList.remove('open');
-document.querySelectorAll('.modal-overlay').forEach(o => o.addEventListener('click', e => { if (e.target===o) o.classList.remove('open'); }));
+window.openModal = id => document.getElementById(id).classList.add('open');
+window.closeModal = id => document.getElementById(id).classList.remove('open');
+document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open')}));
 </script>
 </body>
 </html>
