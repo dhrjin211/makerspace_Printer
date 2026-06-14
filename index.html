@@ -977,11 +977,10 @@
 <div class="toast" id="toast"></div>
 
 <!-- ── FIREBASE ── -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
-import { getFirestore, collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, onSnapshot, query, orderBy, serverTimestamp, increment } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
-
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
 const firebaseConfig = {
   apiKey: "AIzaSyBn3lPZgk3Q_HkZmtMowxXa4dW3xDyl1FA",
   authDomain: "makerspace-software.firebaseapp.com",
@@ -992,9 +991,30 @@ const firebaseConfig = {
   measurementId: "G-2ZMXH2PE1N"
 };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+// compat shims so rest of code works unchanged
+const getAuth = () => auth;
+const getFirestore = () => db;
+const collection = (d, name) => d.collection(name);
+const doc = (d, ...args) => { if (args.length === 1) return d.doc(args[0]); return d.collection(args[0]).doc(args[1]); };
+const setDoc = (ref, data) => ref.set(data);
+const getDoc = (ref) => ref.get();
+const getDocs = (q) => q.get();
+const addDoc = (ref, data) => ref.add(data);
+const updateDoc = (ref, data) => ref.update(data);
+const onSnapshot = (ref, cb) => ref.onSnapshot(cb);
+const query = (ref, ...constraints) => { let q = ref; constraints.forEach(c => { q = c(q); }); return q; };
+const orderBy = (field, dir = 'asc') => (q) => q.orderBy(field, dir);
+const serverTimestamp = () => firebase.firestore.FieldValue.serverTimestamp();
+const increment = (n) => firebase.firestore.FieldValue.increment(n);
+const signInWithEmailAndPassword = (a, email, pass) => a.signInWithEmailAndPassword(email, pass);
+const createUserWithEmailAndPassword = (a, email, pass) => a.createUserWithEmailAndPassword(email, pass);
+const signOut = (a) => a.signOut();
+const onAuthStateChanged = (a, cb) => a.onAuthStateChanged(cb);
+const updateProfile = (user, data) => user.updateProfile(data);
 
 // ── State ──
 let currentUser = null;
@@ -1002,10 +1022,6 @@ let currentUserData = null;
 let selectedPrinter = null;
 const PRINTER_COUNT = 10;
 const ADMIN_EMAILS = ['admin@u.northwestern.edu']; // add real admin emails here
-
-// expose to window so onclick handlers work
-window.db = db;
-window.auth = auth;
 
 // ── Badge definitions ──
 const BADGES = [
