@@ -313,7 +313,7 @@ tr:hover td{background:var(--surface2)}
       <div class="admin-section">
         <div class="admin-section-title">Student Accounts</div>
         <div class="table-wrap"><table>
-          <thead><tr><th>Name</th><th>Email</th><th>Program</th><th>Prints</th><th>Posts</th><th>Joined</th><th>Admin</th></tr></thead>
+          <thead><tr><th>Name / Email</th><th>Program</th><th>Total Prints</th><th>Breakdown</th><th>Materials</th><th>Posts</th><th>Badges</th><th>Joined</th><th>Admin</th></tr></thead>
           <tbody id="admin-users-body"></tbody>
         </table></div>
       </div>
@@ -353,7 +353,7 @@ tr:hover td{background:var(--surface2)}
     </div>
     <div class="field"><label>Notes (orientation, settings, any tricky parts?)</label><textarea id="claim-notes" placeholder="Optional but helpful for feedback..."></textarea></div>
     <div class="modal-footer">
-      <button class="btn btn-primary" style="flex:1" onclick="submitClaim()">🚀 Start Print</button>
+      <button class="btn btn-primary" style="flex:1" onclick="submitClaim()" id="claim-submit-btn">🚀 Start Print</button>
       <button class="btn btn-ghost" onclick="closeModal('claim-modal')">Cancel</button>
     </div>
   </div>
@@ -514,7 +514,8 @@ auth.onAuthStateChanged(async user => {
     }
     const initials = (currentUserData.name||user.email).split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
     document.getElementById('user-avatar').textContent = initials;
-    if (currentUserData.isAdmin) document.getElementById('tab-admin').style.display = '';
+    const adminTab = document.getElementById('tab-admin');
+    adminTab.style.display = currentUserData.isAdmin ? '' : 'none';
     document.getElementById('auth-screen').style.display = 'none';
     document.getElementById('app').style.display = 'block';
     if (!appInited) { appInited=true; initApp(); }
@@ -591,26 +592,38 @@ function renderPrinters(printers) {
 }
 
 window.openClaimOrManage = async p => {
-  if (p.status==='idle') {
-    selectedPrinter = p;
-    document.getElementById('claim-printer-label').textContent = p.id;
-    document.getElementById('claim-jobname').value='';
-    document.getElementById('claim-notes').value='';
-    openModal('claim-modal');
-  } else if (p.currentJob && p.currentJob.userId===currentUser.uid) {
-    if (confirm('Mark print on '+p.id+' as complete?')) await completePrint(p.id,'success');
-  } else {
-    toast(p.id+' is in use by '+(p.currentJob?p.currentJob.userName:'another student'));
+  const fresh = (await db.collection('printers').doc(p.id).get()).data();
+  if (fresh.status !== 'idle') {
+    if (fresh.currentJob && fresh.currentJob.userId === currentUser.uid) {
+      if (confirm('Mark your print on '+p.id+' as complete?')) await completePrint(p.id,'success');
+    } else {
+      toast('🔒 '+p.id+' is locked — in use by '+(fresh.currentJob?fresh.currentJob.userName:'another student'));
+    }
+    return;
   }
+  selectedPrinter = fresh;
+  document.getElementById('claim-printer-label').textContent = p.id;
+  document.getElementById('claim-jobname').value='';
+  document.getElementById('claim-notes').value='';
+  const btn = document.getElementById('claim-submit-btn');
+  btn.disabled = false; btn.textContent = '🚀 Start Print';
+  openModal('claim-modal');
 };
 
 window.submitClaim = async () => {
+  const btn = document.getElementById('claim-submit-btn');
+  if (btn.disabled) return;
   const jobName = document.getElementById('claim-jobname').value.trim();
   const type = document.getElementById('claim-type').value;
   const course = document.getElementById('claim-course').value.trim();
   const material = document.getElementById('claim-material').value;
   const notes = document.getElementById('claim-notes').value.trim();
   if (!jobName) return toast('Please enter a project name');
+  // Re-check printer is still idle
+  const freshSnap = await db.collection('printers').doc(selectedPrinter.id).get();
+  if (freshSnap.data().status !== 'idle') { closeModal('claim-modal'); return toast('Another student just claimed that printer — pick another one.'); }
+  btn.disabled = true; btn.textContent = 'Starting...';
+
   const now = new Date();
   const jobData = {userId:currentUser.uid,userName:currentUserData.name||currentUser.email,jobName,type,course,material,notes,printerId:selectedPrinter.id,status:'printing',progress:0,startedAt:TS(),earlyBird:now.getHours()<8};
   const ref = await db.collection('printJobs').add(jobData);
@@ -633,6 +646,8 @@ async function completePrint(printerId, outcome) {
   jobs.forEach(d => batch.update(d.ref,{status:outcome,completedAt:TS()}));
   await batch.commit();
   await db.collection('printers').doc(printerId).update({status:'idle',currentJob:null,updatedAt:TS()});
+  closeModal('claim-modal');
+  closeModal('status-modal');
   toast(outcome==='success'?'✅ Print complete! Share it in Community 👀':'❌ Print marked as failed');
   currentUserData = (await db.collection('users').doc(currentUser.uid).get()).data();
   showEncourageBanner();
@@ -896,12 +911,19 @@ function listenAdminUsers() {
     const tbody = document.getElementById('admin-users-body');
     tbody.innerHTML = users.map(u => {
       const joined = u.joinedAt&&u.joinedAt.toDate?u.joinedAt.toDate().toLocaleDateString():'—';
+      const total = u.printCount||0;
+      const course = u.coursePrints||0;
+      const personal = Math.max(0, total - course);
+      const mats = (u.materials||[]).join(', ')||'—';
+      const badges = (u.badges||[]).length;
       return `<tr>
-        <td><strong>${u.name||'—'}</strong></td>
-        <td style="font-size:12px;color:var(--muted)">${u.email}</td>
+        <td><strong>${u.name||'—'}</strong><br><span style="font-size:11px;color:var(--muted)">${u.email}</span></td>
         <td>${u.program||'—'}</td>
-        <td>${u.printCount||0}</td>
+        <td style="font-family:var(--mono);font-size:13px;color:var(--orange)">${total}</td>
+        <td style="font-size:12px"><span style="color:#6495ED">${course} course</span><br><span style="color:var(--orange)">${personal} personal</span></td>
+        <td style="font-size:11px;color:var(--muted);max-width:120px">${mats}</td>
         <td>${u.postCount||0}</td>
+        <td>${badges} 🏅</td>
         <td style="font-size:12px;color:var(--muted)">${joined}</td>
         <td><button class="btn btn-sm ${u.isAdmin?'btn-warning':'btn-ghost'}" onclick="toggleAdmin('${u.id}',${!!u.isAdmin})">${u.isAdmin?'Revoke':'Make Admin'}</button></td>
       </tr>`;
