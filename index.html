@@ -981,75 +981,62 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script>
-const firebaseConfig = {
+firebase.initializeApp({
   apiKey: "AIzaSyBn3lPZgk3Q_HkZmtMowxXa4dW3xDyl1FA",
   authDomain: "makerspace-software.firebaseapp.com",
   projectId: "makerspace-software",
   storageBucket: "makerspace-software.firebasestorage.app",
   messagingSenderId: "914241807910",
-  appId: "1:914241807910:web:e0ab1095423ae5540068e7",
-  measurementId: "G-2ZMXH2PE1N"
-};
-
-firebase.initializeApp(firebaseConfig);
+  appId: "1:914241807910:web:e0ab1095423ae5540068e7"
+});
 const auth = firebase.auth();
 const db = firebase.firestore();
+const TS = () => firebase.firestore.FieldValue.serverTimestamp();
+const INC = (n) => firebase.firestore.FieldValue.increment(n);
 
-// compat shims so rest of code works unchanged
-const getAuth = () => auth;
-const getFirestore = () => db;
-const collection = (d, name) => d.collection(name);
-const doc = (d, ...args) => { if (args.length === 1) return d.doc(args[0]); return d.collection(args[0]).doc(args[1]); };
-const setDoc = (ref, data) => ref.set(data);
-const getDoc = (ref) => ref.get();
-const getDocs = (q) => q.get();
-const addDoc = (ref, data) => ref.add(data);
-const updateDoc = (ref, data) => ref.update(data);
-const onSnapshot = (ref, cb) => ref.onSnapshot(cb);
-const query = (ref, ...constraints) => { let q = ref; constraints.forEach(c => { q = c(q); }); return q; };
-const orderBy = (field, dir = 'asc') => (q) => q.orderBy(field, dir);
-const serverTimestamp = () => firebase.firestore.FieldValue.serverTimestamp();
-const increment = (n) => firebase.firestore.FieldValue.increment(n);
-const signInWithEmailAndPassword = (a, email, pass) => a.signInWithEmailAndPassword(email, pass);
-const createUserWithEmailAndPassword = (a, email, pass) => a.createUserWithEmailAndPassword(email, pass);
-const signOut = (a) => a.signOut();
-const onAuthStateChanged = (a, cb) => a.onAuthStateChanged(cb);
-const updateProfile = (user, data) => user.updateProfile(data);
-
-// ── State ──
 let currentUser = null;
 let currentUserData = null;
 let selectedPrinter = null;
 const PRINTER_COUNT = 10;
-const ADMIN_EMAILS = ['admin@u.northwestern.edu']; // add real admin emails here
+const ADMIN_EMAILS = ['admin@u.northwestern.edu'];
 
-// ── Badge definitions ──
 const BADGES = [
   { id: 'first_print', icon: '🚀', name: 'First Print', desc: 'Completed your first print', condition: d => d.printCount >= 1 },
   { id: 'five_prints', icon: '🔥', name: 'Getting Warmed Up', desc: '5 prints completed', condition: d => d.printCount >= 5 },
   { id: 'ten_prints', icon: '🏆', name: 'Power User', desc: '10 prints completed', condition: d => d.printCount >= 10 },
   { id: 'shared_project', icon: '✨', name: 'Showoff', desc: 'Posted to the community showcase', condition: d => d.postCount >= 1 },
-  { id: 'gave_feedback', icon: '💬', name: 'Good Mentor', desc: 'Left feedback on someone\'s print', condition: d => d.feedbackGiven >= 1 },
+  { id: 'gave_feedback', icon: '💬', name: 'Good Mentor', desc: "Left feedback on someone's print", condition: d => d.feedbackGiven >= 1 },
   { id: 'course_print', icon: '📚', name: 'Academic Maker', desc: 'Completed a course project print', condition: d => d.coursePrints >= 1 },
   { id: 'multi_material', icon: '🎨', name: 'Material Explorer', desc: 'Printed in 3 different materials', condition: d => (d.materials || []).length >= 3 },
   { id: 'early_bird', icon: '🌅', name: 'Early Bird', desc: 'Started a print before 8am', condition: d => d.earlyBird },
 ];
 
-// ── Auth handlers ──
+// ── Toast ──
+window.toast = (msg, duration = 3500) => {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.style.display = 'none', duration);
+};
+
+// ── Auth UI ──
 window.toggleAuthMode = () => {
   const login = document.getElementById('login-form');
   const signup = document.getElementById('signup-form');
-  login.style.display = login.style.display === 'none' ? '' : 'none';
-  signup.style.display = signup.style.display === 'none' ? '' : 'none';
+  const isLogin = login.style.display !== 'none';
+  login.style.display = isLogin ? 'none' : 'block';
+  signup.style.display = isLogin ? 'block' : 'none';
 };
 
 window.doLogin = async () => {
   const email = document.getElementById('login-email').value.trim();
   const pass = document.getElementById('login-password').value;
+  if (!email || !pass) return toast('Please enter email and password');
   try {
-    await signInWithEmailAndPassword(auth, email, pass);
+    await auth.signInWithEmailAndPassword(email, pass);
   } catch (e) {
-    toast('Login failed: ' + (e.code === 'auth/invalid-credential' ? 'Wrong email or password' : e.message));
+    toast('Login failed: ' + (e.code === 'auth/too-many-requests' ? 'Too many attempts — wait a few minutes' : e.code === 'auth/invalid-credential' ? 'Wrong email or password' : e.message));
   }
 };
 
@@ -1061,48 +1048,42 @@ window.doSignup = async () => {
   const pass = document.getElementById('signup-password').value;
   if (!first || !last || !email || !pass) return toast('Please fill in all fields');
   try {
-    const cred = await createUserWithEmailAndPassword(auth, email, pass);
-    await updateProfile(cred.user, { displayName: `${first} ${last}` });
-    await setDoc(doc(db, 'users', cred.user.uid), {
-      name: `${first} ${last}`,
-      email,
-      program,
-      printCount: 0,
-      postCount: 0,
-      feedbackGiven: 0,
-      coursePrints: 0,
-      materials: [],
-      earlyBird: false,
-      badges: [],
-      isAdmin: false,
-      joinedAt: serverTimestamp()
+    const cred = await auth.createUserWithEmailAndPassword(email, pass);
+    await cred.user.updateProfile({ displayName: first + ' ' + last });
+    await db.collection('users').doc(cred.user.uid).set({
+      name: first + ' ' + last,
+      email, program,
+      printCount: 0, postCount: 0, feedbackGiven: 0, coursePrints: 0,
+      materials: [], earlyBird: false, badges: [], isAdmin: false,
+      joinedAt: TS()
     });
-    toast('Welcome to Corner Makery, ' + first + '!');
+    // onAuthStateChanged will fire and handle the redirect
   } catch (e) {
     toast('Signup failed: ' + e.message);
   }
 };
 
-window.doLogout = () => signOut(auth);
+window.doLogout = async () => {
+  await auth.signOut();
+};
 
 // ── Auth state ──
-onAuthStateChanged(auth, async user => {
+auth.onAuthStateChanged(async user => {
   if (user) {
     currentUser = user;
-    const snap = await getDoc(doc(db, 'users', user.uid));
-    if (snap.exists()) {
-      currentUserData = snap.data();
-    } else {
+    try {
+      const snap = await db.collection('users').doc(user.uid).get();
+      currentUserData = snap.exists ? snap.data() : { name: user.displayName || user.email, isAdmin: false, printCount: 0, postCount: 0, feedbackGiven: 0, materials: [], badges: [] };
+    } catch(e) {
       currentUserData = { name: user.displayName || user.email, isAdmin: false, printCount: 0, postCount: 0, feedbackGiven: 0, materials: [], badges: [] };
     }
     const initials = (currentUserData.name || user.email).split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
     document.getElementById('user-avatar').textContent = initials;
-    document.getElementById('user-name-display').textContent = currentUserData.name || user.email;
     if (ADMIN_EMAILS.includes(user.email) || currentUserData.isAdmin) {
       document.getElementById('tab-admin').style.display = '';
     }
     document.getElementById('auth-screen').style.display = 'none';
-    document.getElementById('app').style.display = '';
+    document.getElementById('app').style.display = 'block';
     initApp();
   } else {
     currentUser = null;
@@ -1113,12 +1094,11 @@ onAuthStateChanged(auth, async user => {
 });
 
 // ── App init ──
+let appInited = false;
 async function initApp() {
-  // Show loading state
-  document.getElementById('printers-grid').innerHTML = `
-    <div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--muted);font-family:var(--mono);font-size:12px;letter-spacing:0.1em">
-      INITIALIZING PRINTER FLEET...
-    </div>`;
+  if (appInited) return;
+  appInited = true;
+  document.getElementById('printers-grid').innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--muted);font-family:var(--mono);font-size:12px;letter-spacing:0.1em">INITIALIZING PRINTER FLEET...</div>`;
   await seedPrinters();
   listenPrinters();
   listenActivity();
@@ -1127,16 +1107,15 @@ async function initApp() {
   renderBadges();
 }
 
-// ── Seed printer docs if they don't exist ──
+// ── Seed printers ──
 async function seedPrinters() {
   const promises = [];
   for (let i = 1; i <= PRINTER_COUNT; i++) {
-    const id = `X1C-${String(i).padStart(2,'0')}`;
-    const ref = doc(db, 'printers', id);
+    const id = 'X1C-' + String(i).padStart(2,'0');
     promises.push(
-      getDoc(ref).then(snap => {
-        if (!snap.exists()) {
-          return setDoc(ref, { id, model: 'X1 Carbon', status: 'idle', currentJob: null, updatedAt: serverTimestamp() });
+      db.collection('printers').doc(id).get().then(snap => {
+        if (!snap.exists) {
+          return db.collection('printers').doc(id).set({ id, model: 'X1 Carbon', status: 'idle', currentJob: null, updatedAt: TS() });
         }
       })
     );
@@ -1144,9 +1123,9 @@ async function seedPrinters() {
   await Promise.all(promises);
 }
 
-// ── Listen to printers ──
+// ── Printers ──
 function listenPrinters() {
-  onSnapshot(collection(db, 'printers'), snap => {
+  db.collection('printers').onSnapshot(snap => {
     const printers = {};
     snap.forEach(d => printers[d.id] = d.data());
     renderPrinters(printers);
@@ -1156,45 +1135,24 @@ function listenPrinters() {
 function renderPrinters(printers) {
   const grid = document.getElementById('printers-grid');
   grid.innerHTML = '';
-  const sorted = Object.values(printers).sort((a,b) => a.id.localeCompare(b.id));
-  sorted.forEach(p => {
+  Object.values(printers).sort((a,b) => a.id.localeCompare(b.id)).forEach(p => {
     const card = document.createElement('div');
-    card.className = `printer-card ${p.status}`;
+    card.className = 'printer-card ' + p.status;
     const job = p.currentJob;
-    const isMine = job && job.userId === currentUser?.uid;
-
+    const isMine = job && currentUser && job.userId === currentUser.uid;
     card.innerHTML = `
       <div class="printer-header">
-        <div>
-          <div class="printer-id">${p.id}</div>
-          <div class="printer-model">${p.model}</div>
-        </div>
+        <div><div class="printer-id">${p.id}</div><div class="printer-model">${p.model}</div></div>
         <div class="status-pill ${p.status}">${p.status}</div>
       </div>
-      ${p.status === 'idle' ? `
-        <div class="printer-info">Ready to print</div>
-        <div class="claim-hint">↗ Click to claim this printer</div>
-      ` : job ? `
-        <div class="printer-info">
-          <strong>${job.jobName}</strong><br>
-          ${job.userName} · ${job.material}<br>
-          <span class="feed-tag tag-${job.type}" style="display:inline-flex;margin-top:3px;">${job.type}</span>
-          ${job.course ? `<br>${job.course}` : ''}
-        </div>
-        ${job.progress !== undefined ? `
-          <div class="progress-bar"><div class="progress-fill" style="width:${job.progress}%"></div></div>
-          <div style="font-family:var(--mono);font-size:10px;color:var(--muted)">${job.progress}% complete</div>
-        ` : ''}
-        ${isMine ? `<div class="claim-hint" style="color:var(--orange)">▶ Your print — click to update</div>` : ''}
-      ` : ''}
+      ${p.status === 'idle' ? `<div class="printer-info">Ready to print</div><div class="claim-hint">↗ Click to claim this printer</div>`
+      : job ? `<div class="printer-info"><strong>${job.jobName}</strong><br>${job.userName} · ${job.material}<br><span class="feed-tag tag-${job.type}" style="display:inline-flex;margin-top:3px">${job.type}</span>${job.course ? '<br>' + job.course : ''}</div>${job.progress !== undefined ? `<div class="progress-bar"><div class="progress-fill" style="width:${job.progress}%"></div></div><div style="font-family:var(--mono);font-size:10px;color:var(--muted)">${job.progress}% complete</div>` : ''}${isMine ? '<div class="claim-hint" style="color:var(--orange)">▶ Your print — click to mark complete</div>' : ''}` : ''}
     `;
-
     card.onclick = () => openClaimOrManage(p);
     grid.appendChild(card);
   });
 }
 
-// ── Claim / manage printer ──
 window.openClaimOrManage = async (printer) => {
   if (printer.status === 'idle') {
     selectedPrinter = printer;
@@ -1202,12 +1160,12 @@ window.openClaimOrManage = async (printer) => {
     document.getElementById('claim-jobname').value = '';
     document.getElementById('claim-notes').value = '';
     openModal('claim-modal');
-  } else if (printer.currentJob?.userId === currentUser?.uid) {
-    if (confirm(`Mark print on ${printer.id} as complete?`)) {
+  } else if (printer.currentJob && printer.currentJob.userId === currentUser.uid) {
+    if (confirm('Mark print on ' + printer.id + ' as complete?')) {
       await completePrint(printer.id, 'success');
     }
   } else {
-    toast(`${printer.id} is in use by ${printer.currentJob?.userName || 'another student'}`);
+    toast(printer.id + ' is in use by ' + (printer.currentJob ? printer.currentJob.userName : 'another student'));
   }
 };
 
@@ -1225,33 +1183,20 @@ window.submitClaim = async () => {
     userName: currentUserData.name || currentUser.email,
     jobName, type, course, material, notes,
     printerId: selectedPrinter.id,
-    status: 'printing',
-    progress: 0,
-    startedAt: serverTimestamp(),
-    earlyBird: now.getHours() < 8,
+    status: 'printing', progress: 0,
+    startedAt: TS(), earlyBird: now.getHours() < 8
   };
 
-  // Add to print jobs collection
-  const jobRef = await addDoc(collection(db, 'printJobs'), jobData);
+  const jobRef = await db.collection('printJobs').add(jobData);
+  await db.collection('printers').doc(selectedPrinter.id).update({ status: 'printing', currentJob: Object.assign({}, jobData, { jobId: jobRef.id }), updatedAt: TS() });
 
-  // Update printer doc
-  await updateDoc(doc(db, 'printers', selectedPrinter.id), {
-    status: 'printing',
-    currentJob: { ...jobData, jobId: jobRef.id },
-    updatedAt: serverTimestamp()
-  });
-
-  // Update user stats
-  const userRef = doc(db, 'users', currentUser.uid);
-  const updates = { printCount: increment(1) };
-  if (type === 'course') updates.coursePrints = increment(1);
+  const updates = { printCount: INC(1) };
+  if (type === 'course') updates.coursePrints = INC(1);
   if (now.getHours() < 8) updates.earlyBird = true;
-
-  // Track materials
-  const userSnap = await getDoc(userRef);
-  const existingMats = userSnap.data()?.materials || [];
+  const userSnap = await db.collection('users').doc(currentUser.uid).get();
+  const existingMats = userSnap.data().materials || [];
   if (!existingMats.includes(material)) updates.materials = [...existingMats, material];
-  await updateDoc(userRef, updates);
+  await db.collection('users').doc(currentUser.uid).update(updates);
 
   closeModal('claim-modal');
   toast('Printer claimed! Happy printing 🚀');
@@ -1259,31 +1204,17 @@ window.submitClaim = async () => {
 };
 
 async function completePrint(printerId, outcome) {
-  const printerRef = doc(db, 'printers', printerId);
-  const printerSnap = await getDoc(printerRef);
-  const job = printerSnap.data()?.currentJob;
-  if (!job) return;
-
-  // Update print job
-  const jobs = await getDocs(query(collection(db, 'printJobs'), orderBy('startedAt', 'desc')));
-  jobs.forEach(async d => {
-    if (d.data().printerId === printerId && d.data().status === 'printing') {
-      await updateDoc(doc(db, 'printJobs', d.id), { status: outcome, completedAt: serverTimestamp() });
-    }
-  });
-
-  // Reset printer
-  await updateDoc(printerRef, { status: 'idle', currentJob: null, updatedAt: serverTimestamp() });
+  const jobs = await db.collection('printJobs').where('printerId','==',printerId).where('status','==','printing').get();
+  jobs.forEach(d => d.ref.update({ status: outcome, completedAt: TS() }));
+  await db.collection('printers').doc(printerId).update({ status: 'idle', currentJob: null, updatedAt: TS() });
   toast(outcome === 'success' ? '✅ Print marked complete!' : '❌ Print marked as failed');
   checkBadges();
 }
 
-// ── Activity feed ──
+// ── Activity ──
 function listenActivity() {
-  const q = query(collection(db, 'printJobs'), orderBy('startedAt', 'desc'));
-  onSnapshot(q, snap => {
-    const jobs = [];
-    snap.forEach(d => jobs.push({ id: d.id, ...d.data() }));
+  db.collection('printJobs').orderBy('startedAt','desc').onSnapshot(snap => {
+    const jobs = snap.docs.map(d => Object.assign({ id: d.id }, d.data()));
     renderActivity(jobs);
     renderAdminTable(jobs);
     updateStats(jobs);
@@ -1292,38 +1223,22 @@ function listenActivity() {
 
 function renderActivity(jobs) {
   const feed = document.getElementById('activity-feed');
-  if (!jobs.length) {
-    feed.innerHTML = '<div class="empty-state"><div class="icon">📋</div><p>No print jobs yet. Claim a printer to get started.</p></div>';
-    return;
-  }
+  if (!jobs.length) { feed.innerHTML = '<div class="empty-state"><div class="icon">📋</div><p>No print jobs yet. Claim a printer to get started.</p></div>'; return; }
   feed.innerHTML = jobs.map(job => {
     const initials = (job.userName || '?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
-    const time = job.startedAt?.toDate ? job.startedAt.toDate().toLocaleString() : '—';
+    const time = job.startedAt && job.startedAt.toDate ? job.startedAt.toDate().toLocaleString() : '—';
     const feedbacks = job.feedback || [];
-    return `
-      <div class="feed-item">
-        <div class="feed-avatar">${initials}</div>
-        <div class="feed-body">
-          <div class="feed-top">
-            <span class="feed-name">${job.userName}</span>
-            <span class="feed-tag tag-${job.type}">${job.type}</span>
-            <span style="font-family:var(--mono);font-size:10px;color:var(--muted)">${job.printerId}</span>
-          </div>
-          <div class="feed-meta">${job.material} · ${job.course || 'No course'} · ${time}</div>
-          <div class="feed-desc"><strong>${job.jobName}</strong>${job.notes ? '<br><span style="color:var(--muted)">' + job.notes + '</span>' : ''}</div>
-          <span class="feed-outcome outcome-${job.status === 'printing' ? 'active' : job.status}">${job.status === 'printing' ? '▶ In Progress' : job.status === 'success' ? '✓ Completed' : '✗ Failed'}</span>
-          ${feedbacks.length ? `
-            <div class="feedback-section">
-              ${feedbacks.map(f => `<div class="feedback-item"><strong>${f.by}:</strong> ${f.text}</div>`).join('')}
-            </div>
-          ` : '<div class="feedback-section" style="border-top:none"></div>'}
-          <div class="feedback-input-row">
-            <input type="text" placeholder="Leave feedback or tips..." id="fb-${job.id}">
-            <button class="btn btn-ghost btn-sm" onclick="submitFeedback('${job.id}')">Send</button>
-          </div>
-        </div>
+    return `<div class="feed-item">
+      <div class="feed-avatar">${initials}</div>
+      <div class="feed-body">
+        <div class="feed-top"><span class="feed-name">${job.userName}</span><span class="feed-tag tag-${job.type}">${job.type}</span><span style="font-family:var(--mono);font-size:10px;color:var(--muted)">${job.printerId}</span></div>
+        <div class="feed-meta">${job.material} · ${job.course || 'No course'} · ${time}</div>
+        <div class="feed-desc"><strong>${job.jobName}</strong>${job.notes ? '<br><span style="color:var(--muted)">'+job.notes+'</span>' : ''}</div>
+        <span class="feed-outcome outcome-${job.status==='printing'?'active':job.status}">${job.status==='printing'?'▶ In Progress':job.status==='success'?'✓ Completed':'✗ Failed'}</span>
+        ${feedbacks.length ? '<div class="feedback-section">'+feedbacks.map(f=>`<div class="feedback-item"><strong>${f.by}:</strong> ${f.text}</div>`).join('')+'</div>' : ''}
+        <div class="feedback-input-row"><input type="text" placeholder="Leave feedback or tips..." id="fb-${job.id}"><button class="btn btn-ghost btn-sm" onclick="submitFeedback('${job.id}')">Send</button></div>
       </div>
-    `;
+    </div>`;
   }).join('');
 }
 
@@ -1331,13 +1246,12 @@ window.submitFeedback = async (jobId) => {
   const input = document.getElementById('fb-' + jobId);
   const text = input.value.trim();
   if (!text) return;
-  const jobRef = doc(db, 'printJobs', jobId);
-  const snap = await getDoc(jobRef);
-  const existing = snap.data()?.feedback || [];
+  const ref = db.collection('printJobs').doc(jobId);
+  const snap = await ref.get();
+  const existing = snap.data().feedback || [];
   existing.push({ by: currentUserData.name || currentUser.email, text, at: new Date().toISOString() });
-  await updateDoc(jobRef, { feedback: existing });
-  // Update feedback given counter
-  await updateDoc(doc(db, 'users', currentUser.uid), { feedbackGiven: increment(1) });
+  await ref.update({ feedback: existing });
+  await db.collection('users').doc(currentUser.uid).update({ feedbackGiven: INC(1) });
   input.value = '';
   toast('Feedback sent!');
   checkBadges();
@@ -1345,51 +1259,34 @@ window.submitFeedback = async (jobId) => {
 
 // ── Community ──
 function listenCommunity() {
-  const q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'));
-  onSnapshot(q, snap => {
-    const posts = [];
-    snap.forEach(d => posts.push({ id: d.id, ...d.data() }));
+  db.collection('posts').orderBy('createdAt','desc').onSnapshot(snap => {
+    const posts = snap.docs.map(d => Object.assign({ id: d.id }, d.data()));
     renderCommunity(posts);
   });
 }
 
 function renderCommunity(posts) {
   const grid = document.getElementById('community-grid');
-  if (!posts.length) {
-    grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><div class="icon">✨</div><p>Be the first to share a project.</p></div>';
-    return;
-  }
+  if (!posts.length) { grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><div class="icon">✨</div><p>Be the first to share a project.</p></div>'; return; }
   grid.innerHTML = posts.map(p => {
-    const liked = (p.likedBy || []).includes(currentUser?.uid);
-    return `
-      <div class="project-card">
-        ${p.imageUrl ? `<img class="project-image" src="${p.imageUrl}" alt="${p.title}" onerror="this.style.display='none'">` : `<div class="project-image-placeholder">NO PHOTO YET</div>`}
-        <div class="project-body">
-          <div class="project-title">${p.title}</div>
-          <div class="project-meta">${p.userName} · <span class="feed-tag tag-${p.tag}">${p.tag}</span></div>
-          <div class="project-desc">${p.description}</div>
-        </div>
-        <div class="project-footer">
-          <button class="likes-btn ${liked ? 'liked' : ''}" onclick="toggleLike('${p.id}', ${liked})">
-            ♥ ${(p.likedBy||[]).length} ${liked ? 'Liked' : 'Like'}
-          </button>
-          <span style="font-size:11px;color:var(--muted)">${p.createdAt?.toDate ? p.createdAt.toDate().toLocaleDateString() : ''}</span>
-        </div>
+    const liked = currentUser && (p.likedBy || []).includes(currentUser.uid);
+    return `<div class="project-card">
+      ${p.imageUrl ? `<img class="project-image" src="${p.imageUrl}" onerror="this.style.display='none'">` : '<div class="project-image-placeholder">NO PHOTO YET</div>'}
+      <div class="project-body"><div class="project-title">${p.title}</div><div class="project-meta">${p.userName} · <span class="feed-tag tag-${p.tag}">${p.tag}</span></div><div class="project-desc">${p.description}</div></div>
+      <div class="project-footer">
+        <button class="likes-btn ${liked?'liked':''}" onclick="toggleLike('${p.id}',${liked})">♥ ${(p.likedBy||[]).length} ${liked?'Liked':'Like'}</button>
+        <span style="font-size:11px;color:var(--muted)">${p.createdAt&&p.createdAt.toDate?p.createdAt.toDate().toLocaleDateString():''}</span>
       </div>
-    `;
+    </div>`;
   }).join('');
 }
 
 window.toggleLike = async (postId, isLiked) => {
-  const ref = doc(db, 'posts', postId);
-  const snap = await getDoc(ref);
-  let likes = snap.data()?.likedBy || [];
-  if (isLiked) {
-    likes = likes.filter(id => id !== currentUser.uid);
-  } else {
-    likes.push(currentUser.uid);
-  }
-  await updateDoc(ref, { likedBy: likes });
+  const ref = db.collection('posts').doc(postId);
+  const snap = await ref.get();
+  let likes = snap.data().likedBy || [];
+  likes = isLiked ? likes.filter(id => id !== currentUser.uid) : [...likes, currentUser.uid];
+  await ref.update({ likedBy: likes });
 };
 
 window.openPostModal = () => openModal('post-modal');
@@ -1400,14 +1297,8 @@ window.submitPost = async () => {
   const imageUrl = document.getElementById('post-image').value.trim();
   const tag = document.getElementById('post-tag').value;
   if (!title || !desc) return toast('Please add a title and description');
-
-  await addDoc(collection(db, 'posts'), {
-    title, description: desc, imageUrl: imageUrl || null,
-    tag, userName: currentUserData.name || currentUser.email,
-    userId: currentUser.uid, likedBy: [], createdAt: serverTimestamp()
-  });
-
-  await updateDoc(doc(db, 'users', currentUser.uid), { postCount: increment(1) });
+  await db.collection('posts').add({ title, description: desc, imageUrl: imageUrl || null, tag, userName: currentUserData.name || currentUser.email, userId: currentUser.uid, likedBy: [], createdAt: TS() });
+  await db.collection('users').doc(currentUser.uid).update({ postCount: INC(1) });
   closeModal('post-modal');
   toast('Project posted! ✨');
   checkBadges();
@@ -1415,120 +1306,75 @@ window.submitPost = async () => {
 
 // ── Badges ──
 async function checkBadges() {
-  const userRef = doc(db, 'users', currentUser.uid);
-  const snap = await getDoc(userRef);
+  const snap = await db.collection('users').doc(currentUser.uid).get();
   const data = snap.data();
   const earned = data.badges || [];
-  const newBadges = [];
-  BADGES.forEach(b => {
-    if (!earned.includes(b.id) && b.condition(data)) newBadges.push(b.id);
-  });
+  const newBadges = BADGES.filter(b => !earned.includes(b.id) && b.condition(data)).map(b => b.id);
   if (newBadges.length) {
-    await updateDoc(userRef, { badges: [...earned, ...newBadges] });
-    newBadges.forEach(id => {
-      const b = BADGES.find(x => x.id === id);
-      toast(`🏅 Badge unlocked: ${b.name}!`);
-    });
-    // Re-render after short delay
+    await db.collection('users').doc(currentUser.uid).update({ badges: [...earned, ...newBadges] });
+    newBadges.forEach(id => toast('🏅 Badge unlocked: ' + BADGES.find(b=>b.id===id).name + '!'));
     setTimeout(renderBadges, 500);
   }
 }
 
 async function renderBadges() {
-  const userRef = doc(db, 'users', currentUser.uid);
-  const snap = await getDoc(userRef);
-  const data = snap.data() || {};
-  const earned = data.badges || [];
-  const grid = document.getElementById('badges-grid');
-  grid.innerHTML = BADGES.map(b => {
+  const snap = await db.collection('users').doc(currentUser.uid).get();
+  const earned = (snap.data() || {}).badges || [];
+  document.getElementById('badges-grid').innerHTML = BADGES.map(b => {
     const isEarned = earned.includes(b.id);
-    return `
-      <div class="badge-card ${isEarned ? 'earned' : 'locked'}">
-        <div class="badge-icon">${b.icon}</div>
-        <div class="badge-name">${b.name}</div>
-        <div class="badge-desc">${b.desc}</div>
-        ${isEarned ? '<div style="font-family:var(--mono);font-size:10px;color:var(--orange);margin-top:0.5rem">✓ EARNED</div>' : ''}
-      </div>
-    `;
+    return `<div class="badge-card ${isEarned?'earned':'locked'}"><div class="badge-icon">${b.icon}</div><div class="badge-name">${b.name}</div><div class="badge-desc">${b.desc}</div>${isEarned?'<div style="font-family:var(--mono);font-size:10px;color:var(--orange);margin-top:0.5rem">✓ EARNED</div>':''}</div>`;
   }).join('');
 }
 
 // ── Stats ──
 async function listenStats() {
-  const usersSnap = await getDocs(collection(db, 'users'));
-  document.getElementById('stat-members').textContent = usersSnap.size;
+  const snap = await db.collection('users').get();
+  document.getElementById('stat-members').textContent = snap.size;
 }
 
 function updateStats(jobs) {
   const today = new Date(); today.setHours(0,0,0,0);
   const active = jobs.filter(j => j.status === 'printing').length;
-  const todayPrints = jobs.filter(j => j.startedAt?.toDate && j.startedAt.toDate() >= today).length;
+  const todayPrints = jobs.filter(j => j.startedAt && j.startedAt.toDate && j.startedAt.toDate() >= today).length;
   document.getElementById('stat-active').textContent = active;
   document.getElementById('stat-idle').textContent = PRINTER_COUNT - active;
   document.getElementById('stat-today').textContent = todayPrints;
 }
 
-// ── Admin table ──
+// ── Admin ──
 function renderAdminTable(jobs) {
   const tbody = document.getElementById('admin-table-body');
-  if (!jobs.length) {
-    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:2rem">No jobs yet</td></tr>';
-    return;
-  }
+  if (!jobs.length) { tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:2rem">No jobs yet</td></tr>'; return; }
   tbody.innerHTML = jobs.map(j => {
-    const time = j.startedAt?.toDate ? j.startedAt.toDate().toLocaleString() : '—';
-    return `
-      <tr>
-        <td><strong>${j.userName}</strong></td>
-        <td><span style="font-family:var(--mono);font-size:12px">${j.printerId}</span></td>
-        <td>${j.jobName}</td>
-        <td><span class="feed-tag tag-${j.type}">${j.type}</span></td>
-        <td>${j.material}</td>
-        <td><span class="feed-outcome outcome-${j.status === 'printing' ? 'active' : j.status}">${j.status}</span></td>
-        <td style="font-size:12px;color:var(--muted)">${time}</td>
-        <td>
-          ${j.status === 'printing' ? `
-            <button class="btn btn-success btn-sm" onclick="adminComplete('${j.printerId}', 'success')">✓ Done</button>
-            <button class="btn btn-danger btn-sm" style="margin-top:4px" onclick="adminComplete('${j.printerId}', 'failed')">✗ Fail</button>
-          ` : '—'}
-        </td>
-      </tr>
-    `;
+    const time = j.startedAt && j.startedAt.toDate ? j.startedAt.toDate().toLocaleString() : '—';
+    return `<tr>
+      <td><strong>${j.userName}</strong></td>
+      <td><span style="font-family:var(--mono);font-size:12px">${j.printerId}</span></td>
+      <td>${j.jobName}</td>
+      <td><span class="feed-tag tag-${j.type}">${j.type}</span></td>
+      <td>${j.material}</td>
+      <td><span class="feed-outcome outcome-${j.status==='printing'?'active':j.status}">${j.status}</span></td>
+      <td style="font-size:12px;color:var(--muted)">${time}</td>
+      <td>${j.status==='printing'?`<button class="btn btn-success btn-sm" onclick="adminComplete('${j.printerId}','success')">✓ Done</button> <button class="btn btn-danger btn-sm" onclick="adminComplete('${j.printerId}','failed')">✗ Fail</button>`:'—'}</td>
+    </tr>`;
   }).join('');
 }
 
-window.adminComplete = async (printerId, outcome) => {
-  await completePrint(printerId, outcome);
-};
+window.adminComplete = (printerId, outcome) => completePrint(printerId, outcome);
 
 window.adminSimulate = async (type) => {
-  const printerIds = ['X1C-01','X1C-02','X1C-03','X1C-04','X1C-05'];
-  const names = ['Alex Chen', 'Maya Patel', 'Jordan Lee', 'Sam Williams', 'Taylor Kim'];
-  const materials = ['PLA', 'PETG', 'ABS', 'TPU'];
-  const jobs = ['DTC Prototype', 'Shelf Bracket', 'Phone Stand', 'RC Car Wheel', 'Lab Fixture'];
-  const pid = printerIds[Math.floor(Math.random() * printerIds.length)];
-  const name = names[Math.floor(Math.random() * names.length)];
-  const mat = materials[Math.floor(Math.random() * materials.length)];
-
+  const pids = ['X1C-01','X1C-02','X1C-03','X1C-04','X1C-05'];
+  const names = ['Alex Chen','Maya Patel','Jordan Lee','Sam Williams','Taylor Kim'];
+  const mats = ['PLA','PETG','ABS','TPU'];
+  const jobNames = ['DTC Prototype','Shelf Bracket','Phone Stand','RC Car Wheel','Lab Fixture'];
+  const pid = pids[Math.floor(Math.random()*pids.length)];
   if (type === 'start') {
-    const jobData = {
-      userId: 'sim-' + Date.now(),
-      userName: name,
-      jobName: jobs[Math.floor(Math.random() * jobs.length)],
-      type: 'course',
-      course: 'DTC 101',
-      material: mat,
-      notes: 'Simulated job',
-      printerId: pid,
-      status: 'printing',
-      progress: Math.floor(Math.random() * 80) + 10,
-      startedAt: serverTimestamp(),
-    };
-    const jobRef = await addDoc(collection(db, 'printJobs'), jobData);
-    await updateDoc(doc(db, 'printers', pid), { status: 'printing', currentJob: { ...jobData, jobId: jobRef.id }, updatedAt: serverTimestamp() });
-    toast(`Simulated print started on ${pid}`);
+    const jobData = { userId:'sim-'+Date.now(), userName:names[Math.floor(Math.random()*names.length)], jobName:jobNames[Math.floor(Math.random()*jobNames.length)], type:'course', course:'DTC 101', material:mats[Math.floor(Math.random()*mats.length)], notes:'Simulated job', printerId:pid, status:'printing', progress:Math.floor(Math.random()*80)+10, startedAt:TS() };
+    const ref = await db.collection('printJobs').add(jobData);
+    await db.collection('printers').doc(pid).update({ status:'printing', currentJob:Object.assign({},jobData,{jobId:ref.id}), updatedAt:TS() });
+    toast('Simulated print started on ' + pid);
   } else {
-    await completePrint(pid, type === 'done' ? 'success' : 'failed');
+    await completePrint(pid, type==='done'?'success':'failed');
   }
 };
 
@@ -1536,26 +1382,14 @@ window.adminSimulate = async (type) => {
 window.setTab = (tab) => {
   document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-  document.getElementById('content-' + tab).classList.add('active');
-  document.getElementById('tab-' + tab).classList.add('active');
+  document.getElementById('content-'+tab).classList.add('active');
+  document.getElementById('tab-'+tab).classList.add('active');
 };
 
-// ── Modal helpers ──
+// ── Modals ──
 window.openModal = (id) => document.getElementById(id).classList.add('open');
 window.closeModal = (id) => document.getElementById(id).classList.remove('open');
-
-// Close on backdrop click
-document.querySelectorAll('.modal-overlay').forEach(overlay => {
-  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open'); });
-});
-
-// ── Toast ──
-window.toast = (msg, duration = 3000) => {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.style.display = 'block';
-  setTimeout(() => t.style.display = 'none', duration);
-};
+document.querySelectorAll('.modal-overlay').forEach(o => o.addEventListener('click', e => { if (e.target===o) o.classList.remove('open'); }));
 </script>
 </body>
 </html>
